@@ -448,7 +448,7 @@ export const fetchSGO = async (): Promise<SgoIncident[]> => {
 
 export const fetchGponEvents = async (): Promise<GponEvent[]> => {
     try {
-        const response = await fetch('dados_gpon.json?t=' + new Date().getTime());
+        const response = await fetch(`${import.meta.env.BASE_URL}dados_gpon.json?t=` + new Date().getTime());
         if (!response.ok) throw new Error('GitHub Raw API error');
         return await response.json();
     } catch (e) {
