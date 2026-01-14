@@ -77,13 +77,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenIncident, session })
           subcluster: event.subcluster || 'N/A'
         }));
 
+        if (gponData.length === 0) {
+          console.warn('DEBUG: GPON Data is empty.');
+          // Only alert if in dev or if user explicitly requested debug, but here helpful
+          // alert('Atenção: Arquivo de dados existe mas está vazio.');
+        }
+
         console.log('DEBUG - mappedSgoData item 0:', mappedSgoData[0]);
         setAllIncidents(monitorData);
         setSgoIncidents(mappedSgoData);
         setError(null);
-      } catch (err) {
+      } catch (err: any) {
         if (isInitial) setError('Erro ao carregar dados operacionais');
+        const msg = err?.message || 'Erro desconhecido';
         console.error('Erro na sincronização de fundo:', err);
+        alert(`Erro ao carregar dados: ${msg}\nVerifique o console para mais detalhes.`);
       } finally {
         setLoading(false);
       }

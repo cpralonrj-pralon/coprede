@@ -453,6 +453,6 @@ export const fetchGponEvents = async (): Promise<GponEvent[]> => {
         return await response.json();
     } catch (e) {
         console.error('GitHub Fetch Error:', e);
-        return [];
+        throw e;
     }
 };
