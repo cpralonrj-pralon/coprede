@@ -1,0 +1,9 @@
+Testing URL: https://sqqnaacqtpjkfwrhnwyv.supabase.co
+Key length: 46
+
+--- Attempt 1: "Newmonitor" ---
+Success. Rows: 5
+Sample Ticket: "N/A"
+
+--- Attempt 2: "newmonitor" ---
+Error: Could not find the table 'public.newmonitor' in the schema cache

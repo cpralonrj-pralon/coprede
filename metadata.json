@@ -1,0 +1,9 @@
+
+{
+  "name": "COP Rede Dashboard",
+  "description": "A comprehensive Network Operations Center (NOC) dashboard for real-time monitoring, incident management, and user control, featuring a dark premium aesthetic with Claro Red accents.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
