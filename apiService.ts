@@ -1,4 +1,5 @@
 
+import { User, Incident, GponEvent } from './types';
 
 export interface ApiIncident {
     data: string;
@@ -25,6 +26,12 @@ export interface DashboardMetrics {
     availableMarkets: string[];
     availableStatuses: string[];
     topCities: {
+        name: string;
+        value: number;
+        topFailure: string;
+        stats: { name: string; count: number; percent: number }[];
+    }[];
+    topCitiesOver24h?: {
         name: string;
         value: number;
         topFailure: string;
@@ -285,7 +292,7 @@ export const calculateSgoMetrics = (incidents: SgoIncident[]): DashboardMetrics 
     // Tratadas: "Designado" + "Em Progresso"
     const pending = incidents.filter(i => {
         const status = i.acionado?.toLowerCase() || '';
-        return status.includes('novo') || status.includes('pendente');
+        return status.includes('novo') || status.includes('pendente') || status.includes('open');
     }).length;
 
     const treated = incidents.filter(i => {
@@ -310,12 +317,22 @@ export const calculateSgoMetrics = (incidents: SgoIncident[]): DashboardMetrics 
 
     const evolutionData = Object.entries(evolutionMap)
         .map(([time, val]) => ({ time, val }))
+
         .sort((a, b) => a.time.localeCompare(b.time));
 
-    // Top Failures by sintoma
+    // Top Cities (> 24h)
+    const longRunningIncidents = incidents.filter(i => {
+        try {
+            const start = new Date(i.dataInicio).getTime();
+            const now = new Date().getTime();
+            return (now - start) > (24 * 60 * 60 * 1000); // > 24 hours
+        } catch { return false; }
+    });
+
+    // Top Failures (Now Cities > 24h)
     const sintomaMap: Record<string, number> = {};
-    incidents.forEach(item => {
-        const key = item.sintoma || 'Outros';
+    longRunningIncidents.forEach(item => { // Use longRunningIncidents
+        const key = item.cidade || 'N/A'; // Group by CITY instead of sintoma
         sintomaMap[key] = (sintomaMap[key] || 0) + 1;
     });
 
@@ -330,12 +347,18 @@ export const calculateSgoMetrics = (incidents: SgoIncident[]): DashboardMetrics 
         .slice(0, 5);
 
     // Top Cities & Matrix
+    // Filter Pending/Novo incidents for Matrix
+    const pendingIncidents = incidents.filter(i => {
+        const status = i.acionado?.toLowerCase() || '';
+        return status.includes('novo') || status.includes('pendente') || status.includes('open');
+    });
+
     const cityMap: Record<string, { total: number; failures: Record<string, number> }> = {};
     const failureGlobalCount: Record<string, number> = {};
 
-    incidents.forEach(item => {
+    pendingIncidents.forEach(item => { // Use pendingIncidents
         const city = item.cidade || 'N/A';
-        const failure = item.sintoma || 'Outros';
+        const failure = item.sintomaOper || 'Outros'; // Use sintomaOper (nm_cat_oper2)
 
         if (!cityMap[city]) cityMap[city] = { total: 0, failures: {} };
         cityMap[city].total++;
@@ -344,12 +367,38 @@ export const calculateSgoMetrics = (incidents: SgoIncident[]): DashboardMetrics 
         failureGlobalCount[failure] = (failureGlobalCount[failure] || 0) + 1;
     });
 
+    // Top Categories (Columns)
     const topFailures = Object.entries(failureGlobalCount)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 5)
         .map(([name]) => name);
 
     const topCities = Object.entries(cityMap)
+        .map(([name, data]) => ({
+            name,
+            value: data.total,
+            stats: topFailures.map(fail => ({
+                name: fail,
+                count: data.failures[fail] || 0,
+                percent: Math.round(((data.failures[fail] || 0) / data.total) * 100)
+            })),
+            topFailure: Object.entries(data.failures).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A'
+        }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 10);
+
+
+
+    const cityMapOver24h: Record<string, { total: number; failures: Record<string, number> }> = {};
+    longRunningIncidents.forEach(item => {
+        const city = item.cidade || 'N/A';
+        const failure = item.sintoma || 'Outros';
+        if (!cityMapOver24h[city]) cityMapOver24h[city] = { total: 0, failures: {} };
+        cityMapOver24h[city].total++;
+        cityMapOver24h[city].failures[failure] = (cityMapOver24h[city].failures[failure] || 0) + 1;
+    });
+
+    const topCitiesOver24h = Object.entries(cityMapOver24h)
         .map(([name, data]) => ({
             name,
             value: data.total,
@@ -371,6 +420,7 @@ export const calculateSgoMetrics = (incidents: SgoIncident[]): DashboardMetrics 
         evolutionData,
         techData,
         topCities,
+        topCitiesOver24h,
         outages: [],
         recentIncidents: [],
         availableMarkets: [],
@@ -394,4 +444,15 @@ export const fetchSGO = async (): Promise<SgoIncident[]> => {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500));
     return MOCK_SGO_INCIDENTS;
+};
+
+export const fetchGponEvents = async (): Promise<GponEvent[]> => {
+    try {
+        const response = await fetch('dados_gpon.json?t=' + new Date().getTime());
+        if (!response.ok) throw new Error('GitHub Raw API error');
+        return await response.json();
+    } catch (e) {
+        console.error('GitHub Fetch Error:', e);
+        return [];
+    }
 };

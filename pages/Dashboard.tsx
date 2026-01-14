@@ -1,7 +1,7 @@
 ﻿
 import React, { useState, useEffect, useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { fetchRawIncidents, fetchSGO, calculateMetrics, calculateSgoMetrics, ApiIncident, SgoIncident, DashboardMetrics } from '../apiService';
+import { fetchRawIncidents, fetchSGO, fetchGponEvents, calculateMetrics, calculateSgoMetrics, ApiIncident, SgoIncident, GponEvent, DashboardMetrics } from '../apiService';
 
 
 interface DashboardProps {
@@ -19,7 +19,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenIncident, session })
   const [sgoIncidents, setSgoIncidents] = useState<any[]>([]);
 
   // View State
-  const [activeTab, setActiveTab] = useState<'newmonitor' | 'sgo'>('newmonitor');
+  const [activeTab, setActiveTab] = useState<'newmonitor' | 'sgo'>('sgo');
 
   // Filter States
   const [selectedTime, setSelectedTime] = useState<string>('Tudo');
@@ -52,17 +52,38 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenIncident, session })
         if (isInitial) setLoading(true);
 
         // Fetch Parallel
-        const [monitorData, sgoData] = await Promise.all([
+        const [monitorData, gponData] = await Promise.all([
           fetchRawIncidents(),
-          fetchSGO()
+          fetchGponEvents()
         ]);
 
+        // Map GPON Data to SGO Format for compatibility
+        const mappedSgoData = gponData.map((event: GponEvent) => ({
+          ticket: event.id_mostra?.toString() || 'N/A',
+          incidente: event.nm_tipo || 'Evento GPON',
+          sintoma: event.ds_sumario || event.nm_tipo || '',
+          acionado: event.nm_status || 'Novo',
+          dataInicio: event.dh_inicio || new Date().toISOString(),
+          observacao: event.ds_sumario || '',
+          cidade: event.nm_cidade || 'N/A',
+          node: event.nm_origem || 'N/A', // Using nm_origem as Node/Equipment
+          tecnologia: event.nm_cat_prod3 || 'GPON',
+          rede: event.nm_cat_prod2 || 'VITAL',
+          sintomaOper: event.nm_cat_oper2 || 'SEM_CAT',
+          impacto: 'MÉDIO', // Default or infer
+          regional: event.regional || 'N/A',
+          grupo: event.grupo || 'N/A',
+          cluster: event.cluster || 'N/A',
+          subcluster: event.subcluster || 'N/A'
+        }));
+
+        console.log('DEBUG - mappedSgoData item 0:', mappedSgoData[0]);
         setAllIncidents(monitorData);
-        setSgoIncidents(sgoData);
+        setSgoIncidents(mappedSgoData);
         setError(null);
       } catch (err) {
         if (isInitial) setError('Erro ao carregar dados operacionais');
-        console.error('Erro na sincronizaÃ§Ã£o de fundo:', err);
+        console.error('Erro na sincronização de fundo:', err);
       } finally {
         setLoading(false);
       }
@@ -92,7 +113,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenIncident, session })
     if (selectedTime === 'Hoje' && allIncidents.length > 0) {
       const latestDate = allIncidents[0].data.split('T')[0];
       filtered = filtered.filter(i => i.data.startsWith(latestDate));
-    } else if (selectedTime === 'Ãšltimos 7 dias' && allIncidents.length > 0) {
+    } else if (selectedTime === 'Últimos 7 dias' && allIncidents.length > 0) {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       filtered = filtered.filter(i => new Date(i.data) >= sevenDaysAgo);
@@ -231,26 +252,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenIncident, session })
             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Painel Operacional</p>
             <span className="bg-success/20 text-success text-[10px] font-black px-1.5 py-0.5 rounded border border-success/20 animate-pulse">LIVE</span>
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">VisÃ£o Geral</h1>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Visão Geral</h1>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex bg-surface-dark border border-white/10 rounded-2xl p-1 gap-1">
-          <button
-            onClick={() => setActiveTab('newmonitor')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'newmonitor' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-          >
-            <span className="material-symbols-outlined text-lg">assessment</span>
-            Newmonitor
-          </button>
-          <button
-            onClick={() => setActiveTab('sgo')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'sgo' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-          >
-            <span className="material-symbols-outlined text-lg">satellite_alt</span>
-            SGO
-          </button>
-        </div>
+
 
         <div className="flex items-center gap-6">
           {/* Neighbors / Other Users Stack */}
@@ -293,321 +299,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenIncident, session })
         </div>
       </header>
 
-      {/* NEWMONITOR VIEW */}
-      {activeTab === 'newmonitor' && (
-        <>
-          {/* Filters (Newmonitor Only) */}
-          <div className="flex flex-wrap gap-3 py-2 relative z-50">
-            <div className="relative">
-              <button
-                onClick={() => { setShowTimeDropdown(!showTimeDropdown); setShowMarketDropdown(false); setShowStatusDropdown(false); setShowGroupDropdown(false); }}
-                className={`flex-shrink-0 px-6 py-2.5 rounded-full text-sm font-bold border flex items-center gap-2 transition-all ${selectedTime !== 'Hoje' ? 'bg-primary/20 border-primary text-white' : 'bg-primary text-white shadow-lg shadow-primary/20'}`}
-              >
-                {selectedTime} <span className="material-symbols-outlined text-base">keyboard_arrow_down</span>
-              </button>
-              {showTimeDropdown && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-surface-dark border border-white/10 rounded-2xl shadow-2xl z-50 p-2">
-                  {['Hoje', 'Ãšltimos 7 dias', 'Tudo'].map(t => (
-                    <button
-                      key={t}
-                      onClick={() => { setSelectedTime(t); setShowTimeDropdown(false); }}
-                      className="w-full text-left px-4 py-2 rounded-xl text-sm hover:bg-white/5 text-gray-300 hover:text-white transition-colors"
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="relative">
-              <button
-                onClick={() => { setShowMarketDropdown(!showMarketDropdown); setShowTimeDropdown(false); setShowStatusDropdown(false); setShowGroupDropdown(false); }}
-                className={`flex-shrink-0 px-6 py-2.5 rounded-full text-sm font-bold border flex items-center gap-2 transition-all ${selectedMarkets.length > 0 ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20' : 'bg-surface-dark border-white/5 text-gray-300'}`}
-              >
-                {selectedMarkets.length === 0 ? 'Rede: Todas' : `Redes: ${selectedMarkets.length}`}
-                <span className="material-symbols-outlined text-base">{showMarketDropdown ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}</span>
-              </button>
-              {showMarketDropdown && (
-                <div className="absolute top-full left-0 mt-2 w-64 bg-surface-dark border border-white/10 rounded-2xl shadow-2xl z-50 max-h-80 overflow-y-auto no-scrollbar p-3">
-                  <div className="flex justify-between items-center mb-3 px-1">
-                    <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Selecionar Redes</span>
-                    {selectedMarkets.length > 0 && (
-                      <button onClick={() => setSelectedMarkets([])} className="text-[10px] font-bold text-primary hover:underline">Limpar</button>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    {availableMarkets.map(m => {
-                      const isSelected = selectedMarkets.includes(m);
-                      return (
-                        <button
-                          key={m}
-                          onClick={() => {
-                            setSelectedMarkets(prev =>
-                              isSelected ? prev.filter(item => item !== m) : [...prev, m]
-                            );
-                          }}
-                          className={`w-full text-left px-4 py-2.5 rounded-xl text-xs flex items-center justify-between group transition-all ${isSelected ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-white/5 text-gray-400'}`}
-                        >
-                          <span className="truncate pr-2">{m}</span>
-                          <div className={`h-4 w-4 rounded border transition-all flex items-center justify-center ${isSelected ? 'bg-primary border-primary' : 'border-white/20 group-hover:border-white/40'}`}>
-                            {isSelected && <span className="material-symbols-outlined text-[12px] text-white font-black">check</span>}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="relative">
-              <button
-                onClick={() => { setShowStatusDropdown(!showStatusDropdown); setShowTimeDropdown(false); setShowMarketDropdown(false); setShowGroupDropdown(false); }}
-                className={`flex-shrink-0 px-6 py-2.5 rounded-full text-sm font-bold border flex items-center gap-2 transition-all ${selectedStatuses.length > 0 ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20' : 'bg-surface-dark border-white/5 text-gray-300'}`}
-              >
-                {selectedStatuses.length === 0 ? 'Status: Todos' : `Status: ${selectedStatuses.length}`}
-                <span className="material-symbols-outlined text-base">{showStatusDropdown ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}</span>
-              </button>
-              {showStatusDropdown && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-surface-dark border border-white/10 rounded-2xl shadow-2xl z-50 p-3">
-                  <div className="flex justify-between items-center mb-3 px-1">
-                    <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Selecionar Status</span>
-                    {selectedStatuses.length > 0 && (
-                      <button onClick={() => setSelectedStatuses([])} className="text-[10px] font-bold text-primary hover:underline">Limpar</button>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    {availableStatuses.map(s => {
-                      const isSelected = selectedStatuses.includes(s);
-                      return (
-                        <button
-                          key={s}
-                          onClick={() => {
-                            setSelectedStatuses(prev =>
-                              isSelected ? prev.filter(item => item !== s) : [...prev, s]
-                            );
-                          }}
-                          className={`w-full text-left px-4 py-2.5 rounded-xl text-xs flex items-center justify-between group transition-all ${isSelected ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-white/5 text-gray-400'}`}
-                        >
-                          <span className="truncate pr-2">{s}</span>
-                          <div className={`h-4 w-4 rounded border transition-all flex items-center justify-center ${isSelected ? 'bg-primary border-primary' : 'border-white/20 group-hover:border-white/40'}`}>
-                            {isSelected && <span className="material-symbols-outlined text-[12px] text-white font-black">check</span>}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="relative">
-              <button
-                onClick={() => { setShowGroupDropdown(!showGroupDropdown); setShowTimeDropdown(false); setShowMarketDropdown(false); setShowStatusDropdown(false); }}
-                className={`flex-shrink-0 px-6 py-2.5 rounded-full text-sm font-bold border flex items-center gap-2 transition-all ${selectedGroups.length > 0 ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20' : 'bg-surface-dark border-white/5 text-gray-300'}`}
-              >
-                {selectedGroups.length === 0 ? 'Grupo: Todos' : `Grupos: ${selectedGroups.length}`}
-                <span className="material-symbols-outlined text-base">{showGroupDropdown ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}</span>
-              </button>
-              {showGroupDropdown && (
-                <div className="absolute top-full left-0 mt-2 w-64 bg-surface-dark border border-white/10 rounded-2xl shadow-2xl z-50 max-h-80 overflow-y-auto no-scrollbar p-3">
-                  <div className="flex justify-between items-center mb-3 px-1">
-                    <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Selecionar Grupos</span>
-                    {selectedGroups.length > 0 && (
-                      <button onClick={() => setSelectedGroups([])} className="text-[10px] font-bold text-primary hover:underline">Limpar</button>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    {availableGroups.map(g => {
-                      const isSelected = selectedGroups.includes(g);
-                      return (
-                        <button
-                          key={g}
-                          onClick={() => {
-                            setSelectedGroups(prev =>
-                              isSelected ? prev.filter(item => item !== g) : [...prev, g]
-                            );
-                          }}
-                          className={`w-full text-left px-4 py-2.5 rounded-xl text-xs flex items-center justify-between group transition-all ${isSelected ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-white/5 text-gray-400'}`}
-                        >
-                          <span className="truncate pr-2">{g}</span>
-                          <div className={`h-4 w-4 rounded border transition-all flex items-center justify-center ${isSelected ? 'bg-primary border-primary' : 'border-white/20 group-hover:border-white/40'}`}>
-                            {isSelected && <span className="material-symbols-outlined text-[12px] text-white font-black">check</span>}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* KPIs */}
-          <div className="grid grid-cols-12 gap-6">
-            <div className="col-span-12 lg:col-span-8 bg-surface-dark rounded-3xl p-8 border border-white/5 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                <span className="material-symbols-outlined text-[120px] text-white">analytics</span>
-              </div>
-              <div className="relative z-10">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-sm font-bold text-gray-400">Total Ocorrências</p>
-                  <span className="bg-success/10 text-success text-xs font-bold px-3 py-1 rounded-full">+Real Time</span>
-                </div>
-                <div className="flex items-baseline gap-4">
-                  <span className="text-6xl font-black text-white tracking-tighter">{filteredMetrics.total.toLocaleString()}</span>
-                  <span className="text-sm text-gray-500 font-medium">Atualizado agora</span>
-                </div>
-              </div>
-            </div>
-            <div className="col-span-6 lg:col-span-2 bg-surface-dark rounded-3xl p-6 border border-white/5">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="h-2 w-2 rounded-full bg-primary animate-pulse"></span>
-                <p className="text-sm font-bold text-gray-400">Pendentes</p>
-              </div>
-              <p className="text-4xl font-black text-primary">{filteredMetrics.pending}</p>
-              <p className="text-xs text-gray-500 mt-2">Aguardando Tratativa</p>
-            </div>
-            <div className="col-span-6 lg:col-span-2 bg-surface-dark rounded-3xl p-6 border border-white/5">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="material-symbols-outlined text-success text-base filled">check_circle</span>
-                <p className="text-sm font-bold text-gray-400">Tratadas</p>
-              </div>
-              <p className="text-4xl font-black text-white">{filteredMetrics.treated}</p>
-              <p className="text-xs text-gray-500 mt-2">{filteredMetrics.efficiency} eficiência</p>
-            </div>
-          </div>
-
-          {/* Outage Alerts Banner */}
-          {filteredMetrics.outages.length > 0 && (
-            <div className="bg-red-500/10 border border-red-500/50 rounded-3xl p-6 mb-8 animate-pulse">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-red-500 rounded-full text-white">
-                  <span className="material-symbols-outlined filled">fmd_bad</span>
-                </div>
-                <div>
-                  <h2 className="text-xl font-black text-red-500 uppercase tracking-widest">Alerta de Outage Detectado</h2>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {filteredMetrics.outages.map((outage, idx) => (
-                      <span key={idx} className="bg-red-500/20 text-red-400 text-xs font-bold px-3 py-1 rounded-lg border border-red-500/20">
-                        {outage.market}: {outage.type} (Vol: {outage.count})
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Top 10 Cities & Technology */}
-          <div className="grid grid-cols-12 gap-6">
-            <div className="col-span-12 lg:col-span-7 bg-surface-dark rounded-3xl p-8 border border-white/5">
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-xl font-bold text-white">Evolução Temporal</h2>
-                <div className="bg-background-dark p-1 rounded-xl flex gap-1">
-                  <button className="px-4 py-1.5 rounded-lg bg-surface-dark text-white text-xs font-bold shadow-lg">24h</button>
-                </div>
-              </div>
-              <div className="h-64 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={filteredMetrics.evolutionData}>
-                    <defs>
-                      <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#e0062e" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#e0062e" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333" />
-                    <XAxis dataKey="time" stroke="#666" fontSize={10} axisLine={false} tickLine={false} />
-                    <YAxis hide />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: '#1E1E1E', border: '1px solid #333', borderRadius: '12px' }}
-                      itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}
-                    />
-                    <Area type="monotone" dataKey="val" stroke="#e0062e" strokeWidth={3} fillOpacity={1} fill="url(#colorVal)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className="col-span-12 lg:col-span-5 bg-surface-dark rounded-3xl p-8 border border-white/5">
-              <h2 className="text-xl font-bold text-white mb-8">Top Falhas</h2>
-              <div className="space-y-6">
-                {filteredMetrics.techData.map((tech, idx) => (
-                  <div key={idx}>
-                    <div className="flex justify-between text-sm font-bold mb-2">
-                      <span className="text-gray-400">{tech.name}</span>
-                      <span className="text-white">{tech.value}%</span>
-                    </div>
-                    <div className="h-2.5 w-full bg-white/5 rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full shadow-lg"
-                        style={{ width: `${tech.value}%`, backgroundColor: tech.color }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Top 10 Cidades x Falhas (Dynamic Matrix) */}
-          <section className="space-y-6">
-            <h2 className="text-xl font-bold text-white">Matriz de Ofensores: Top 10 Cidades</h2>
-
-            <div className="overflow-x-auto rounded-3xl border border-white/5">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-surface-dark border-b border-white/5">
-                    <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-widest text-left">Ranking</th>
-                    <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-widest text-left">Cidade</th>
-                    <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-widest text-center">Total</th>
-                    <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-widest text-left">Principal Ofensor</th>
-                    {/* Dynamic Columns for Top Global Failures */}
-                    {filteredMetrics.topCities[0]?.stats.map((stat, i) => (
-                      <th key={i} className="p-4 text-[10px] font-black text-gray-600 uppercase tracking-widest text-center hidden md:table-cell max-w-[100px] truncate" title={stat.name}>
-                        {stat.name.split(':')[1] || stat.name}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5 bg-surface-dark/50">
-                  {filteredMetrics.topCities.map((city, idx) => (
-                    <tr key={idx} className="hover:bg-white/5 transition-colors group">
-                      <td className="p-4">
-                        <span className={`text-xs font-black px-2 py-1 rounded-lg ${idx < 3 ? 'bg-primary/20 text-primary' : 'bg-white/5 text-gray-500'}`}>#{idx + 1}</span>
-                      </td>
-                      <td className="p-4 font-bold text-gray-300 group-hover:text-white transition-colors">{city.name}</td>
-                      <td className="p-4 text-center font-black text-white">{city.value}</td>
-                      <td className="p-4">
-                        <div className="flex flex-col">
-                          <span className="text-xs font-bold text-white truncate max-w-[150px]" title={city.topFailure}>{city.topFailure}</span>
-                          <div className="h-1 w-full bg-white/10 rounded-full mt-1 overflow-hidden">
-                            <div className="h-full bg-primary" style={{ width: `${city.stats.find(s => s.name === city.topFailure)?.percent || 0}%` }}></div>
-                          </div>
-                        </div>
-                      </td>
-                      {/* Stats Cells */}
-                      {city.stats.map((stat, i) => (
-                        <td key={i} className="p-4 text-center hidden md:table-cell">
-                          {stat.count > 0 ? (
-                            <span className="text-xs font-bold text-gray-400" title={`${stat.count} (${stat.percent}%)`}>
-                              {stat.count}
-                            </span>
-                          ) : (
-                            <span className="text-gray-800 text-[10px]">â€¢</span>
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </>
-      )}
 
       {/* SGO VIEW */}
       {
@@ -802,7 +493,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenIncident, session })
               </div>
 
               <div className="col-span-12 lg:col-span-5 bg-surface-dark rounded-3xl p-8 border border-white/5">
-                <h2 className="text-xl font-bold text-white mb-8">Top Falhas</h2>
+                <h2 className="text-xl font-bold text-white mb-8">Top Cidades ({'>'} 24h)</h2>
                 <div className="space-y-6">
                   {filteredSgoMetrics.techData.map((tech, idx) => (
                     <div key={idx}>
@@ -823,8 +514,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenIncident, session })
             </div>
 
             {/* Matrix */}
+            {/* Matrix */}
             <section className="space-y-6">
-              <h2 className="text-xl font-bold text-white">Matriz de Ofensores: Top 10 Cidades</h2>
+              <h2 className="text-xl font-bold text-white">Matriz de Ofensores: Pendentes</h2>
               <div className="overflow-x-auto rounded-3xl border border-white/5">
                 <table className="w-full text-left border-collapse">
                   <thead>
@@ -832,8 +524,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenIncident, session })
                       <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-widest text-left">Ranking</th>
                       <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-widest text-left">Cidade</th>
                       <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-widest text-center">Total</th>
-                      <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-widest text-left">Principal Ofensor</th>
-                      {filteredSgoMetrics.topCities[0]?.stats.map((stat, i) => (
+                      <th className="p-4 text-xs font-black text-gray-500 uppercase tracking-widest text-left">Categoria Operacional</th>
+                      {(filteredSgoMetrics.topCities?.[0]?.stats || []).map((stat, i) => (
                         <th key={i} className="p-4 text-[10px] font-black text-gray-600 uppercase tracking-widest text-center hidden md:table-cell max-w-[100px] truncate" title={stat.name}>
                           {stat.name.split(':')[1] || stat.name}
                         </th>
@@ -841,7 +533,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenIncident, session })
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5 bg-surface-dark/50">
-                    {filteredSgoMetrics.topCities.map((city, idx) => (
+                    {(filteredSgoMetrics.topCities || []).map((city, idx) => (
                       <tr key={idx} className="hover:bg-white/5 transition-colors group">
                         <td className="p-4">
                           <span className={`text-xs font-black px-2 py-1 rounded-lg ${idx < 3 ? 'bg-primary/20 text-primary' : 'bg-white/5 text-gray-500'}`}>#{idx + 1}</span>
@@ -876,7 +568,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenIncident, session })
           </>
         )
       }
-    </div>
+    </div >
   );
 };
 
