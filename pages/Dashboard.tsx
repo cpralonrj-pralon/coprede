@@ -1,7 +1,8 @@
 ﻿
 import React, { useState, useEffect, useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { fetchRawIncidents, fetchSGO, fetchGponEvents, calculateMetrics, calculateSgoMetrics, ApiIncident, SgoIncident, GponEvent, DashboardMetrics } from '../apiService';
+import { fetchRawIncidents, fetchSGO, fetchGponEvents, calculateMetrics, calculateSgoMetrics, DashboardMetrics, ApiIncident, SgoIncident } from '../apiService';
+import { GponEvent } from '../types';
 
 
 interface DashboardProps {
