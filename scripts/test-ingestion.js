@@ -4,7 +4,8 @@
  */
 
 // Configuration
-const API_URL = 'http://localhost:3000/ingestion/incident';
+const API_URL = 'https://coprede-production.up.railway.app/ingestion/incident';
+// const API_URL = 'http://localhost:3000/ingestion/incident'; // Local Dev
 const API_KEY = '9f4c8e2a1b7d4e3aA8D6F2cB9E7D0a4F5C8E1B6D2A9F3';
 
 const MOCK_BATCH = [
@@ -37,7 +38,16 @@ async function runTest() {
             body: JSON.stringify(MOCK_BATCH)
         });
 
-        const data = await response.json();
+        console.log('Status Code:', response.status);
+        const rawText = await response.text();
+        console.log('Raw Response:', rawText.substring(0, 500));
+
+        let data;
+        try {
+            data = JSON.parse(rawText);
+        } catch {
+            throw new Error(`Invalid JSON Response: ${rawText.substring(0, 200)}`);
+        }
 
         if (response.ok) {
             console.log('✅ Success!');

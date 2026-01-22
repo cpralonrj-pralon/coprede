@@ -1,7 +1,8 @@
 
 // Native fetch is used (Node 18+)
 
-const API_URL = 'http://localhost:3000/ingestion/incident';
+const API_URL = 'https://coprede-production.up.railway.app/ingestion/incident';
+// const API_URL = 'http://localhost:3000/ingestion/incident'; // Local Dev
 // Using the key we know is in local .env or hardcoding for the script since we know it from previous context
 const API_KEY = '9f4c8e2a1b7d4e3aA8D6F2cB9E7D0a4F5C8E1B6D2A9F3';
 

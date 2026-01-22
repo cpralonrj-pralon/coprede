@@ -16,10 +16,15 @@ async function bootstrap() {
         whitelist: true, // strip properties not in DTO
     }));
 
-    // Enable CORS for frontend
-    app.enableCors();
+    // Enable CORS for frontend and external tools (n8n)
+    app.enableCors({
+        origin: '*',
+        methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+        credentials: true,
+    });
 
-    await app.listen(3000, '0.0.0.0');
-    console.log('Backend running on http://localhost:3000');
+    const port = process.env.PORT || 3000;
+    await app.listen(port, '0.0.0.0');
+    console.log(`Backend running on port ${port}`);
 }
 bootstrap();

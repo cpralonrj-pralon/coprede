@@ -19,7 +19,7 @@ No seu fluxo do n8n (após coletar os dados do Zabbix/SGO), adicione um node **H
 ### Configurações Principais
 
 *   **Method**: `POST`
-*   **URL**: `http://localhost:3000/ingestion/incident` (ajuste o host conforme necessário)
+*   **URL**: `https://coprede-production.up.railway.app/ingestion/incident`
 *   **Authentication**: `Generic Credential Type` -> `Header Auth` (ou digite manualmente nos headers)
 
 ### Headers
