@@ -54,9 +54,6 @@ export const useDashboardData = () => {
                 nm_cidade: i.nm_cidade,
                 dh_inicio: i.dh_inicio,
                 ds_sumario: i.ds_sumario,
-                nm_cidade: i.nm_cidade,
-                dh_inicio: i.dh_inicio,
-                ds_sumario: i.ds_sumario,
                 regional_raw: i.regional,
                 topologia: i.topologia // Explicitly pass topologia
             }));
