@@ -45,6 +45,9 @@ export class IncidentsService {
             stats.processed++;
         }
 
+        // Log the batch execution
+        await this.logIngestion(stats, payloads.length);
+
         return stats;
     }
 
@@ -134,6 +137,20 @@ export class IncidentsService {
             valor_novo: newVal,
             alterado_em: new Date().toISOString(),
             alterado_por: 'system_backend'
+        });
+    }
+
+    private async logIngestion(stats: any, batchSize: number) {
+        const status = stats.errors === 0 ? 'SUCCESS' : stats.errors < batchSize ? 'PARTIAL' : 'ERROR';
+
+        await this.supabase.client.from('ingestion_logs').insert({
+            source: 'n8n_webhook',
+            status: status,
+            batch_size: batchSize,
+            inserted: stats.inserted,
+            updated: stats.updated,
+            errors: stats.errors,
+            executed_at: new Date().toISOString()
         });
     }
 }
