@@ -1,15 +1,11 @@
-
 import React from 'react';
+import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 
-type View = 'login' | 'dashboard' | 'incident' | 'users' | 'alerts' | 'reports';
+export const Navigation: React.FC = () => {
+  const { currentView, setView } = useApp();
+  const { logout } = useAuth();
 
-interface NavigationProps {
-  currentView: View;
-  setView: (view: View) => void;
-  onLogout: () => void;
-}
-
-export const Navigation: React.FC<NavigationProps> = ({ currentView, setView, onLogout }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
     { id: 'incident', label: 'Monitor', icon: 'monitoring' },
@@ -34,12 +30,11 @@ export const Navigation: React.FC<NavigationProps> = ({ currentView, setView, on
             {navItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => setView(item.id as View)}
-                className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 group ${
-                  currentView === item.id 
-                    ? 'bg-primary/10 text-primary' 
-                    : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                }`}
+                onClick={() => setView(item.id as any)}
+                className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 group ${currentView === item.id
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                  }`}
               >
                 <span className={`material-symbols-outlined text-2xl group-hover:scale-110 transition-transform ${currentView === item.id ? 'filled' : ''}`}>
                   {item.icon}
@@ -55,8 +50,8 @@ export const Navigation: React.FC<NavigationProps> = ({ currentView, setView, on
             <span className="material-symbols-outlined text-gray-400 group-hover:text-white">settings</span>
             <span className="font-medium text-sm text-gray-400 group-hover:text-white">Ajustes</span>
           </button>
-          <button 
-            onClick={onLogout}
+          <button
+            onClick={logout}
             className="flex items-center gap-3 p-3 rounded-xl text-primary hover:bg-primary/10 transition-colors group"
           >
             <span className="material-symbols-outlined">logout</span>
@@ -70,10 +65,9 @@ export const Navigation: React.FC<NavigationProps> = ({ currentView, setView, on
         {navItems.map((item) => (
           <button
             key={item.id}
-            onClick={() => setView(item.id as View)}
-            className={`flex flex-col items-center gap-1 w-full py-1 ${
-              currentView === item.id ? 'text-primary' : 'text-gray-500'
-            }`}
+            onClick={() => setView(item.id as any)}
+            className={`flex flex-col items-center gap-1 w-full py-1 ${currentView === item.id ? 'text-primary' : 'text-gray-500'
+              }`}
           >
             <span className={`material-symbols-outlined text-[24px] ${currentView === item.id ? 'filled' : ''}`}>
               {item.icon}

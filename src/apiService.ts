@@ -1,0 +1,193 @@
+import { createClient } from '@supabase/supabase-js';
+import { ApiIncident, OperationalIncident } from './types';
+
+// Supabase Initialization
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+export const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Re-export types for compatibility
+export type { ApiIncident, OperationalIncident };
+export interface DashboardMetrics {
+    total: number;
+    pending: number;
+    treated: number;
+    efficiency: string;
+    evolutionData: { time: string; val: number }[];
+    techData: { name: string; value: number; color: string }[];
+    recentIncidents: any[];
+    availableMarkets: string[];
+    availableStatuses: string[];
+    topCities: {
+        name: string;
+        value: number;
+        topFailure: string;
+        stats: { name: string; count: number; percent: number }[];
+    }[];
+    topCitiesOver24h?: {
+        name: string;
+        value: number;
+        topFailure: string;
+        stats: { name: string; count: number; percent: number }[];
+    }[];
+    outages: { market: string; type: string; count: number }[];
+}
+
+// Fetch Incidents from Supabase (Real Data - Optimized)
+export const fetchRawIncidents = async (): Promise<OperationalIncident[]> => {
+    try {
+        const { data, error } = await supabase
+            .from('incidents')
+            .select('*')
+            // Filter out closed incidents to optimize initial load
+            .not('nm_status', 'ilike', '%fechado%')
+            .not('nm_status', 'ilike', '%normalizado%')
+            .not('nm_status', 'ilike', '%finalizado%')
+            .order('dh_inicio', { ascending: false })
+            .limit(1000); // Safety limit for extreme cases
+
+        if (error) {
+            console.error('Supabase Fetch Error:', error);
+            throw error;
+        }
+
+        // Debug: Check if topologia is coming from DB
+        if (data && data.length > 0) {
+            console.log('🔍 API RAW DATA SAMPLE:', data[0]);
+            console.log('🔍 Topologia Check:', data.map(i => i.topologia).filter(Boolean).length, 'items with topology');
+        }
+
+        // Return empty array if no data yet (don't break UI)
+        return (data as OperationalIncident[]) || [];
+    } catch (e) {
+        console.error('Unexpected Error fetching incidents:', e);
+        return [];
+    }
+};
+
+// Fallback Mock for legacy Gpon Events if table not ready
+export const fetchGponEvents = async (): Promise<any[]> => {
+    // Ideally this should also be a Supabase table, but keeping file fetch as fallback if needed
+    try {
+        const response = await fetch(`${import.meta.env.BASE_URL}dados_gpon.json?t=` + new Date().getTime());
+        if (!response.ok) return [];
+        return await response.json();
+    } catch {
+        return [];
+    }
+};
+
+// --- METRIC CALCULATORS ---
+// Adapted to work with OperationalIncident
+
+export const calculateMetrics = (incidents: OperationalIncident[]): DashboardMetrics => {
+    const total = incidents.length;
+
+    // Logic: User Defined Rules
+    // Pendentes = PENDENTE, NOVO
+    // Tratadas = DESIGNADO, EM PROGRESSO
+
+    let pending = 0;
+    let treated = 0;
+
+    incidents.forEach(i => {
+        const s = i.nm_status?.toUpperCase() || '';
+
+        if (s.includes('PENDENTE') || s.includes('NOVO') || s.includes('OPEN')) {
+            pending++;
+        } else if (s.includes('DESIGNADO') || s.includes('PROGRESSO') || s.includes('EM ATENDIMENTO')) {
+            treated++;
+        }
+        // Others (e.g. CLOSED if they slip through) are ignored in these specific counters
+    });
+
+    // Efficiency: Treated / (Pending + Treated)
+    const activeTotal = pending + treated;
+    const efficiency = activeTotal > 0 ? `${Math.round((treated / activeTotal) * 100)}%` : '0%';
+
+    // Evolution Data (hourly)
+    const evolutionMap: Record<string, number> = {};
+    incidents.forEach(item => {
+        try {
+            const date = new Date(item.dh_inicio);
+            const hour = date.getHours().toString().padStart(2, '0') + ':00';
+            evolutionMap[hour] = (evolutionMap[hour] || 0) + 1;
+        } catch { }
+    });
+
+    const evolutionData = Object.entries(evolutionMap)
+        .map(([time, val]) => ({ time, val }))
+        .sort((a, b) => a.time.localeCompare(b.time));
+
+    // Tech Data / Type Data
+    const eventTypeMap: Record<string, number> = {};
+    incidents.forEach(item => {
+        const key = item.nm_tipo || item.ds_sumario || 'Outros';
+        eventTypeMap[key] = (eventTypeMap[key] || 0) + 1;
+    });
+
+    const colors = ['#e0062e', '#a855f7', '#3b82f6', '#10b981', '#f59e0b'];
+    const techData = Object.entries(eventTypeMap)
+        .map(([name, count], index) => ({
+            name,
+            value: Math.round((count / total) * 100),
+            color: colors[index % colors.length]
+        }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 5);
+
+    // Recent Incidents
+    const recentIncidents = incidents.slice(0, 4).map(i => ({
+        id: `INC-${i.id_mostra}`,
+        title: i.nm_tipo,
+        location: `${i.nm_cidade} - ${i.regional}`,
+        time: i.dh_inicio ? new Date(i.dh_inicio).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
+        // Simple severity logic
+        status: (i.nm_status?.includes('CRITICO') || i.nm_status?.includes('ROMPIMENTO')) ? 'critical' : 'pending',
+        type: i.nm_tipo
+    }));
+
+    // Top Cities
+    const cityMap: Record<string, number> = {};
+    incidents.forEach(i => {
+        const c = i.nm_cidade || 'N/A';
+        cityMap[c] = (cityMap[c] || 0) + 1;
+    });
+
+    const topCities = Object.entries(cityMap)
+        .map(([name, value]) => ({
+            name,
+            value,
+            topFailure: 'N/A', // simplification
+            stats: []
+        }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 10);
+
+    // Outages (Logic: > 3 incidents in same city/regional with same type)
+    // Simplify for now
+    const outages: any[] = [];
+
+    const availableMarkets = Array.from(new Set(incidents.map(i => i.regional))).filter(Boolean).sort();
+    const availableStatuses = Array.from(new Set(incidents.map(i => i.nm_status))).filter(Boolean).sort();
+
+    return {
+        total,
+        pending,
+        treated,
+        efficiency,
+        evolutionData,
+        techData,
+        recentIncidents,
+        availableMarkets,
+        availableStatuses,
+        topCities,
+        outages
+    };
+};
+
+export const calculateSgoMetrics = (incidents: any[]) => {
+    // Legacy support or alias to calculateMetrics if types match
+    return calculateMetrics(incidents as OperationalIncident[]);
+};

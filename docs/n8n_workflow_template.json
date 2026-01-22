@@ -1,0 +1,80 @@
+{
+    "name": "Ingestão de Incidentes (Template)",
+    "nodes": [
+        {
+            "parameters": {},
+            "name": "Start",
+            "type": "n8n-nodes-base.start",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "functionCode": "// Exemplo de dados gerados (Simulando Zabbix/SGO)\nreturn [\n  {\n    json: {\n      id_mostra: \"INC-\" + Math.floor(Math.random() * 100000),\n      nm_origem: \"ZABBIX\",\n      nm_tipo: \"FALHA_SINAL\",\n      nm_status: \"ABERTO\",\n      dh_inicio: new Date().toISOString(),\n      ds_sumario: \"Incidente gerado via n8n\",\n      nm_cidade: \"SAO PAULO\",\n      regional: \"SPI\",\n      cluster: \"CAPITAL\"\n    }\n  },\n  {\n    json: {\n      id_mostra: \"INC-\" + Math.floor(Math.random() * 100000),\n      nm_origem: \"SGO\",\n      nm_tipo: \"ROMPIMENTO\",\n      nm_status: \"EM_ANALISE\",\n      dh_inicio: new Date().toISOString(),\n      ds_sumario: \"Rompimento de Fibra\",\n      nm_cidade: \"CAMPINAS\",\n      regional: \"SPI\",\n      cluster: \"INTERIOR\"\n    }\n  }\n];"
+            },
+            "name": "Gerar Dados Mock",
+            "type": "n8n-nodes-base.function",
+            "typeVersion": 1,
+            "position": [
+                450,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "requestMethod": "POST",
+                "url": "http://host.docker.internal:3000/ingestion/incident",
+                "options": {},
+                "headerParametersUi": {
+                    "parameter": [
+                        {
+                            "name": "x-api-key",
+                            "value": "9f4c8e2a1b7d4e3aA8D6F2cB9E7D0a4F5C8E1B6D2A9F3"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "jsonParameters": true,
+                "bodyParametersJson": "={{ JSON.stringify([$json]) }}"
+            },
+            "name": "Enviar para Backend",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 1,
+            "position": [
+                650,
+                300
+            ],
+            "notes": "Certifique-se que o backend está rodando e a URL está correta (use o IP da máquina se o n8n estiver em Docker)."
+        }
+    ],
+    "connections": {
+        "Start": {
+            "main": [
+                [
+                    {
+                        "node": "Gerar Dados Mock",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Gerar Dados Mock": {
+            "main": [
+                [
+                    {
+                        "node": "Enviar para Backend",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}
