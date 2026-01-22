@@ -2,10 +2,18 @@ import { createClient } from '@supabase/supabase-js';
 import { ApiIncident, OperationalIncident } from './types';
 
 // Supabase Initialization
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+if (!supabaseUrl || !supabaseKey) {
+    console.error('⚠️ Supabase URL or Key is missing! Check .env or GitHub Secrets.');
+}
+
+// Prevent crash if empty, but calls will fail
+export const supabase = createClient(
+    supabaseUrl || 'https://placeholder.supabase.co',
+    supabaseKey || 'placeholder'
+);
 
 // Re-export types for compatibility
 export type { ApiIncident, OperationalIncident };

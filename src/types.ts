@@ -13,6 +13,8 @@ export interface Incident {
   createdAt: string;
 }
 
+export type ApiIncident = Incident; // Alias for compatibility
+
 export interface GponEvent {
   id_mostra?: number;
   nm_tipo?: string;
