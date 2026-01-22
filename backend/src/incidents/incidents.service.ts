@@ -29,10 +29,19 @@ export class IncidentsService {
     constructor(private readonly supabase: SupabaseService) { }
 
     async processBatch(payloads: IncidentPayload[]) {
-        const stats = { processed: 0, inserted: 0, updated: 0, ignored: 0, errors: 0 };
+        const stats = { processed: 0, inserted: 0, updated: 0, ignored: 0, deleted: 0, errors: 0 };
+        const videoIdsByOrigin: Record<string, string[]> = {};
 
-        // Process sequentially to avoid race conditions on same ID within batch
+        // 1. Process Upserts & Collect IDs
         for (const data of payloads) {
+            // Track IDs by origin for sync
+            if (data.nm_origem && data.id_mostra) {
+                if (!videoIdsByOrigin[data.nm_origem]) {
+                    videoIdsByOrigin[data.nm_origem] = [];
+                }
+                videoIdsByOrigin[data.nm_origem].push(String(data.id_mostra));
+            }
+
             try {
                 const result = await this.upsertIncident(data);
                 if (result.action === 'inserted') stats.inserted++;
@@ -45,10 +54,56 @@ export class IncidentsService {
             stats.processed++;
         }
 
+        // 2. Cleanup Missing (Full Sync)
+        for (const origin of Object.keys(videoIdsByOrigin)) {
+            const activeIds = videoIdsByOrigin[origin];
+            try {
+                const deletedCount = await this.cleanupMissingIncidents(origin, activeIds);
+                stats.deleted += deletedCount;
+            } catch (cleanupError) {
+                this.logger.error(`Error syncing deletions for ${origin}: ${cleanupError.message}`);
+            }
+        }
+
         // Log the batch execution
+        this.logger.log(`Batch Sync Completed: ${stats.processed} processed, ${stats.inserted} new, ${stats.deleted} deleted.`);
         await this.logIngestion(stats, payloads.length);
 
         return stats;
+    }
+
+    private async cleanupMissingIncidents(origin: string, activeIds: string[]): Promise<number> {
+        // Fetch all current IDs for this origin
+        const { data: dbItems, error } = await this.supabase.client
+            .from('incidents')
+            .select('id, id_mostra')
+            .eq('nm_origem', origin);
+
+        if (error) throw error;
+        if (!dbItems || dbItems.length === 0) return 0;
+
+        // Find items in DB that are NOT in the active batch
+        const toDelete = dbItems.filter(item => !activeIds.includes(String(item.id_mostra)));
+
+        if (toDelete.length === 0) return 0;
+
+        const idsToDelete = toDelete.map(i => i.id);
+
+        // Perform Deletion
+        const { error: deleteError } = await this.supabase.client
+            .from('incidents')
+            .delete()
+            .in('id', idsToDelete);
+
+        if (deleteError) throw deleteError;
+
+        // Optional: Log deleted items to history
+        // We do this fire-and-forget to not slow down response
+        toDelete.forEach(item => {
+            this.logHistory(item.id, 'STATUS', 'ACTIVE', 'DELETED_SYNC').catch(() => { });
+        });
+
+        return idsToDelete.length;
     }
 
     // Legacy method for single processing - wraps upsert
