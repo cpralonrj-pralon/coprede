@@ -1,218 +1,199 @@
-# 📊 Documentação da Estrutura do Banco de Dados
+# Documentação Oficial — Banco de Dados
 
-Esta documentação descreve **toda a estrutura do banco de dados**, suas **tabelas**, **relacionamentos** e **políticas de segurança (RLS)** utilizadas na plataforma de **monitoramento de incidentes em tempo real**, integrada ao **Supabase + n8n**.
+**Projeto:** Plataforma de Monitoramento Operacional & Indicadores  
+**Baseado em:** PostgreSQL (Supabase) com Realtime + RLS
 
----
+## 1️⃣ Visão Geral da Arquitetura de Dados
 
-## 🎯 Objetivos do Banco de Dados
+O banco de dados foi projetado seguindo os princípios:
 
-* Centralizar incidentes operacionais (rede, sistemas, produtos)
-* Permitir **ingestão automática via API / n8n**
-* Garantir **leitura segura no frontend (dashboard)**
-* Preservar histórico e rastreabilidade
-* Suportar **Realtime (Supabase Realtime)**
+*   **🔐 Secure by Default**: RLS (Row Level Security) ativo em todas as tabelas.
+*   **🧩 Separação de domínios**: Operacional (Realtime) × Analítico (Histórico).
+*   **🔁 Idempotência**: Prevenção de duplicação na ingestão.
+*   **⚡ Realtime-first**: Arquitetura otimizada para frontend reativo.
+*   **🧼 Fonte única de escrita**: Backend NestJS (Gateway).
 
----
+### Componentes
 
-# 🗄️ TABELAS
-
-## 1️⃣ `incidents`
-
-Tabela principal que representa o **estado atual de cada incidente**.
-
-### 📌 Finalidade
-
-* Fonte única para dashboards
-* Atualizada via **UPSERT pelo n8n**
-
-### 🧱 Estrutura
-
-| Campo        | Tipo        | Descrição                     |
-| ------------ | ----------- | ----------------------------- |
-| id           | uuid (PK)   | Identificador interno         |
-| id_mostra    | text        | ID externo do incidente       |
-| nm_origem    | text        | Origem do incidente           |
-| nm_tipo      | text        | Tipo do incidente             |
-| nm_status    | text        | Status atual                  |
-| dh_inicio    | timestamptz | Data/hora de início           |
-| ds_sumario   | text        | Resumo descritivo             |
-| nm_cidade    | text        | Cidade afetada                |
-| topologia    | text        | Topologia da rede             |
-| tp_topologia | text        | Tipo de topologia             |
-| nm_cat_prod2 | text        | Categoria produto nível 2     |
-| nm_cat_prod3 | text        | Categoria produto nível 3     |
-| nm_cat_oper2 | text        | Categoria operacional nível 2 |
-| nm_cat_oper3 | text        | Categoria operacional nível 3 |
-| regional     | text        | Regional responsável          |
-| grupo        | text        | Grupo operacional             |
-| cluster      | text        | Cluster                       |
-| subcluster   | text        | Subcluster                    |
-| created_at   | timestamptz | Criação do registro           |
-| updated_at   | timestamptz | Última atualização            |
+*   **Supabase PostgreSQL**: Persistência + Realtime
+*   **NestJS Backend**: Escrita, deduplicação e regras de negócio
+*   **n8n**: Coleta, normalização e envio
+*   **Frontend**: Apenas leitura (Consumidor)
 
 ---
 
-## 2️⃣ `incident_history`
+## 2️⃣ Domínios de Dados
 
-Tabela de **histórico imutável** de alterações dos incidentes.
+O banco é dividido em 2 domínios principais para evitar lock excessivo e garantir performance.
 
-### 📌 Finalidade
+### 🧠 Domínio Operacional (Near Realtime)
+Focado no "Agora". Dados quentes, atualizados a cada minuto.
+*   Incidentes
+*   Eventos
+*   Monitoramento ativo
 
-* Auditoria
-* Linha do tempo
-* Compliance
-
-### 🧱 Estrutura
-
-| Campo          | Tipo        | Descrição               |
-| -------------- | ----------- | ----------------------- |
-| id             | uuid (PK)   | Identificador           |
-| incident_id    | uuid (FK)   | Referência ao incidente |
-| campo_alterado | text        | Campo modificado        |
-| valor_anterior | text        | Valor antes             |
-| valor_novo     | text        | Valor depois            |
-| alterado_em    | timestamptz | Data/hora               |
-| alterado_por   | text        | Origem da alteração     |
-
-🔗 Relacionamento:
-
-* `incident_history.incident_id → incidents.id`
+### 📊 Domínio Analítico (Histórico / Indicadores)
+Focado em "Tendências". Dados frios/mornos, atualizados mensalmente ou sob demanda.
+*   KPIs
+*   Métricas mensais
+*   Dados consolidados (Excel / BI)
 
 ---
 
-## 3️⃣ `user_profiles`
+## 3️⃣ Estrutura de Tabelas
 
-Armazena informações adicionais dos usuários autenticados.
+### 🔹 3.1 `public.profiles`
 
-### 📌 Finalidade
+Extensão da tabela de autenticação do Supabase (`auth.users`).
 
-* Controle de acesso
-* Definição de perfil
+**Finalidade:**
+*   Definir papel do usuário
+*   Controlar permissões no frontend
 
-### 🧱 Estrutura
+| Campo | Tipo | Descrição |
+| :--- | :--- | :--- |
+| `id` | UUID | FK → `auth.users` |
+| `email` | TEXT | Email do usuário |
+| `role` | TEXT | `admin` / `operator` / `viewer` |
+| `created_at` | TIMESTAMPTZ | Data de criação |
 
-| Campo      | Tipo        | Descrição                 |
-| ---------- | ----------- | ------------------------- |
-| id         | uuid (PK)   | ID do auth.users          |
-| nome       | text        | Nome do usuário           |
-| perfil     | text        | admin / operador / viewer |
-| regional   | text        | Regional associada        |
-| created_at | timestamptz | Criação                   |
+### 🔹 3.2 `public.incidents`
 
----
+Tabela central de incidentes operacionais.
 
-## 4️⃣ `alerts`
+**Finalidade:**
+*   Espelhar sistemas externos (Zabbix, SGO, GPON)
+*   Alimentar dashboards em tempo real
+*   Ser idempotente
 
-Tabela de alertas derivados dos incidentes.
+**Chave Lógica (Unicidade):**
+`(nm_origem, id_mostra)`
 
-### 📌 Finalidade
+**Campos Principais:**
 
-* Notificações
-* Integração com SMS / Email / Push
+| Categoria | Campos |
+| :--- | :--- |
+| **Identificação** | `id` (UUID), `id_mostra`, `nm_origem` |
+| **Status** | `nm_tipo`, `nm_status` |
+| **Tempo** | `dh_inicio` |
+| **Descrição** | `ds_sumario` |
+| **Localização** | `nm_cidade`, `regional` |
+| **Topologia** | `topologia`, `tp_topologia` |
+| **Segmentação** | `grupo`, `cluster`, `subcluster` |
+| **Categorização** | `nm_cat_prod2`, `nm_cat_prod3`, `nm_cat_oper2`, `nm_cat_oper3` |
+| **Auditoria** | `payload` (JSONB), `created_at`, `updated_at` |
 
-### 🧱 Estrutura
+### 🔹 3.3 `public.incident_history`
 
-| Campo       | Tipo        | Descrição             |
-| ----------- | ----------- | --------------------- |
-| id          | uuid (PK)   | Identificador         |
-| incident_id | uuid (FK)   | Incidente relacionado |
-| tipo        | text        | Tipo de alerta        |
-| mensagem    | text        | Conteúdo              |
-| enviado     | boolean     | Status de envio       |
-| criado_em   | timestamptz | Data/hora             |
+Histórico imutável de mudanças de status.
 
----
+**Finalidade:**
+*   Auditoria
+*   Cálculo de SLA Real
+*   Linha do tempo (Timeline)
 
-## 5️⃣ `operational_snapshots`
+| Campo | Tipo | Descrição |
+| :--- | :--- | :--- |
+| `id` | UUID | PK |
+| `incident_id` | UUID | FK → `incidents` |
+| `old_status` | TEXT | Status anterior |
+| `new_status` | TEXT | Novo status |
+| `changed_at` | TIMESTAMPTZ | Momento da mudança |
 
-Snapshots periódicos do estado operacional.
+### 🔹 3.4 `public.indicadores_residencial` (Novo)
 
-### 📌 Finalidade
+Camada analítica de indicadores consolidados.
 
-* Métricas históricas
-* Relatórios
+**Finalidade:**
+*   Receber dados de Excel (Carga Historica)
+*   Base para KPIs mensais
+*   Dashboards históricos
 
-### 🧱 Estrutura
+**Granularidade:**
+👉 1 linha por `período` + `região` + `cluster`
 
-| Campo             | Tipo        | Descrição         |
-| ----------------- | ----------- | ----------------- |
-| id                | uuid (PK)   | Identificador     |
-| total_incidentes  | int         | Quantidade total  |
-| incidentes_ativos | int         | Incidentes ativos |
-| regional          | text        | Regional          |
-| snapshot_time     | timestamptz | Momento           |
+**Campos:**
 
----
+| Categoria | Campos |
+| :--- | :--- |
+| **Período** | `referencia` (DATE) |
+| **Dimensão** | `regional`, `cidade`, `cluster`, `subcluster` |
+| **Clientes** | `clientes_base`, `clientes_afetados` |
+| **Qualidade** | `disponibilidade`, `indisponibilidade` |
+| **Atendimento** | `tma`, `tme` |
+| **Chamados** | `chamados_abertos`, `chamados_fechados` |
+| **SLA** | `sla` |
+| **Auditoria** | `fonte`, `payload`, `created_at` |
 
-# 🔐 POLÍTICAS DE SEGURANÇA (RLS)
-
-## 🔑 Conceito Geral
-
-| Papel              | Permissão      |
-| ------------------ | -------------- |
-| service_role (n8n) | Total (CRUD)   |
-| authenticated      | Apenas leitura |
-| anon               | Nenhum acesso  |
-
----
-
-## 🔒 `incidents`
-
-* 👀 Leitura: usuários autenticados
-* ✍️ Escrita: apenas service_role
-
----
-
-## 🔒 `incident_history`
-
-* 👀 Leitura: usuários autenticados
-* ✍️ Inserção: apenas service_role
-* ❌ Nunca permite update/delete
-
----
-
-## 🔒 `user_profiles`
-
-* Usuário lê o próprio perfil
-* Admin lê todos
+**Constraint de Unicidade:**
+`UNIQUE (referencia, regional, cidade, cluster, subcluster)`
 
 ---
 
-## 🔒 `alerts`
+## 4️⃣ Segurança (RLS – Row Level Security)
 
-* Leitura: usuários autenticados
-* Escrita: service_role
+**Princípio Central:**
+❌ Frontend **nunca** escreve nas tabelas principais.
+✅ Backend é o único escritor autorizado.
+
+### 🔐 Perfis e Incidentes
+
+| Tabela | Operação | Quem |
+| :--- | :--- | :--- |
+| `profiles` | SELECT | Próprio usuário ou Admin |
+| `incidents` | SELECT | Usuários autenticados |
+| `incidents` | INSERT/UPDATE | `service_role` (Backend) |
+| `incidents` | DELETE | ❌ Bloqueado (Apenas via Sync) |
+
+### 🔐 Indicadores
+
+| Tabela | Operação | Permissão |
+| :--- | :--- | :--- |
+| `indicadores_residencial` | SELECT | Todos autenticados |
+| `indicadores_residencial` | INSERT | `service_role` |
+| `indicadores_residencial` | UPDATE | `service_role` |
+| `indicadores_residencial` | DELETE | ❌ Bloqueado |
 
 ---
 
-## 🔒 `operational_snapshots`
+## 5️⃣ Estratégia de Ingestão de Dados
 
-* Leitura: usuários autenticados
-* Inserção: service_role
+### 🔁 Operacional (Incidents)
+*   **Método:** Batch Upsert
+*   **Chave:** `(nm_origem, id_mostra)`
+*   **Histórico:** Automático via Backend
+*   **Limpeza:** Full Sync (Deleta registros da origem que não vieram no lote atual)
+
+### 📊 Analítico (Indicadores)
+*   **Origem:** Upload de Excel no Google Drive
+*   **Processo n8n:** Lê arquivo → Normaliza → Envia batch
+*   **Backend:** Upsert mensal
+*   **Retenção:** Append Only (Sem delete histórico)
 
 ---
 
-# ⚙️ ARQUITETURA DE ACESSO
+## 6️⃣ Realtime
 
+O Supabase Realtime está ativado nas seguintes tabelas para atualizações instantâneas no Frontend:
+*   `incidents`
+*   `indicadores_residencial`
+
+**Uso no Frontend:**
+*   Cards de KPI
+*   Tabelas dinâmicas
+*   Gráficos ao vivo
+*   Alertas visuais
+
+---
+
+## 📊 Fluxo Final Consolidado
+
+```mermaid
+graph LR
+    A[Excel / GDrive] -->|Leitura| B(n8n Agent)
+    API[APIs Externas] -->|Polling| B
+    B -->|HTTP POST| C{NestJS Backend}
+    C -->|Upsert Logic| D[(Supabase DB)]
+    D -->|Realtime Events| E[Frontend Dashboard]
+    E -->|Read Only| D
 ```
-[ API / N8N ]
-      │ (service_role)
-      ▼
-[ Supabase DB ] ◀── Realtime ──▶ [ Dashboard Frontend ]
-                               (authenticated)
-```
-
----
-
-# ✅ BENEFÍCIOS DA ESTRUTURA
-
-✔ Segurança por padrão
-✔ Escalável
-✔ Auditável
-✔ Realtime-ready
-✔ Compatível com LGPD
-✔ Ideal para NOC / SOC
-
----
-
-📌 **Status**: Estrutura pronta para produção

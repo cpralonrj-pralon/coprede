@@ -86,6 +86,36 @@ export const fetchGponEvents = async (): Promise<any[]> => {
     }
 };
 
+export interface AnomalyAlert {
+    id: string;
+    target_type: 'NODE' | 'CITY' | 'REGION';
+    target_name: string;
+    severity: 'LOW' | 'MEDIUM' | 'HIGH';
+    metric_value: number;
+    message: string;
+    status: 'ACTIVE' | 'ACKNOWLEDGED' | 'RESOLVED';
+    detected_at: string;
+}
+
+export const fetchAnomalies = async (): Promise<AnomalyAlert[]> => {
+    try {
+        const { data, error } = await supabase
+            .from('anomaly_alerts')
+            .select('*')
+            .eq('status', 'ACTIVE')
+            .order('detected_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching anomalies:', error);
+            return [];
+        }
+        return (data as AnomalyAlert[]) || [];
+    } catch (e) {
+        console.error('Unexpected error fetching anomalies:', e);
+        return [];
+    }
+};
+
 // --- METRIC CALCULATORS ---
 // Adapted to work with OperationalIncident
 

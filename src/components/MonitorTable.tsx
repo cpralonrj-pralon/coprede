@@ -43,22 +43,27 @@ export const MonitorTable: React.FC<MonitorTableProps> = ({ onSelect }) => {
                 setError(null);
 
                 const normalizedData: MonitorRow[] = rawData.map((item) => {
-                    const timeStr = item.data.split('T')[1]?.substring(0, 5) || '00:00';
+                    // Defensive coding: ensure item.data exists
+                    const dateStr = item.data || new Date().toISOString();
+                    const timeStr = dateStr.includes('T')
+                        ? dateStr.split('T')[1]?.substring(0, 5)
+                        : '00:00';
+
                     return {
                         id: String(item.idEvento),
                         ticket: item.idEvento,
                         source: 'COp Rede',
-                        title: item.tipoEvento,
-                        location: `${item.cidade} - ${item.mercado}`,
-                        status: item.natureza,
+                        title: item.tipoEvento || 'Sem Título',
+                        location: `${item.cidade || 'N/A'} - ${item.mercado || 'N/A'}`,
+                        status: item.natureza || 'Desconhecido',
                         time: timeStr,
                         fullObject: item,
 
-                        dataRaw: item.data,
-                        mercado: item.mercado,
-                        sintoma: item.sintoma,
-                        cluster: item.grupo,
-                        equipamento: item.equipamento
+                        dataRaw: dateStr,
+                        mercado: item.mercado || 'N/A',
+                        sintoma: item.sintoma || 'N/A',
+                        cluster: item.grupo || 'N/A',
+                        equipamento: item.equipamento || 'N/A'
                     };
                 });
 

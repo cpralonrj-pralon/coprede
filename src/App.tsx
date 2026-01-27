@@ -8,6 +8,8 @@ import { Monitor } from './pages/Monitor';
 import { UserManagement } from './pages/UserManagement';
 import { Alerts } from './pages/Alerts';
 import { Reports } from './pages/Reports';
+import { Indicators } from './pages/Indicators';
+import { Recurrence } from './pages/Recurrence';
 
 const MainLayout: React.FC = () => {
   const { isAuthenticated, login, loading } = useAuth();
@@ -34,6 +36,8 @@ const MainLayout: React.FC = () => {
       <main className="flex-1 overflow-y-auto no-scrollbar pb-20 md:pb-0">
         {currentView === 'dashboard' && <Dashboard />}
         {currentView === 'incident' && <Monitor onBack={() => setView('dashboard')} />}
+        {currentView === 'indicators' && <Indicators />}
+        {currentView === 'recurrence' && <Recurrence />}
         {currentView === 'users' && <UserManagement />}
         {currentView === 'alerts' && <Alerts />}
         {currentView === 'reports' && <Reports />}

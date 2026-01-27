@@ -1,0 +1,106 @@
+{
+    "name": "Ingestão Excel Indicadores (Star Schema)",
+    "nodes": [
+        {
+            "parameters": {},
+            "name": "Start",
+            "type": "n8n-nodes-base.start",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "binaryPropertyName": "data"
+            },
+            "name": "Read Excel File",
+            "type": "n8n-nodes-base.spreadsheetFile",
+            "typeVersion": 1,
+            "position": [
+                450,
+                300
+            ],
+            "notes": "Lê o arquivo Excel upado"
+        },
+        {
+            "parameters": {
+                "functionCode": "// Transforma Linha do Excel -> JSON para Função RPC do Supabase\n// Adapte os nomes das colunas conforme seu Excel real!\n\nconst item = items[0].json;\n\nreturn {\n  json: {\n    p_id_mostra: item['ID_MOSTRA'] || ('GEN-' + Math.random()),\n    \n    // Localidade\n    p_regional: item['REGIONAL'],\n    p_grupo: item['GRUPO'],\n    p_cidade_uf: item['CIDADE'] + '/' + item['UF'],\n    p_uf: item['UF'],\n    \n    // Operacional\n    p_tecnologia: item['TECNOLOGIA'], // 'HFC' ou 'GPON'\n    p_servico: item['SERVICO'],\n    p_natureza: item['NATUREZA'],\n    p_sintoma: item['SINTOMA'],\n    p_ferramenta: item['FERRAMENTA'],\n    p_fechamento: item['FECHAMENTO'],\n    p_solucao: item['SOLUCAO'],\n    \n    // JSONB de Timestamps (Datas)\n    p_timestamps: {\n      dt_inicio: item['DH_INICIO'],\n      dt_fim: item['DH_FIM'],\n      dt_primeiro_acionamento_fo: item['DT_ACIONAMENTO_FO'],\n      dt_inicio_chegou_cop_fo: item['DT_CHEGADA_FILA'],\n      dt_primeiro_acionamento_gpon: item['DT_ACIONAMENTO_GPON']\n      // Adicione outros campos de data aqui\n    },\n    \n    // JSONB de Métricas\n    p_metrics: {\n      volume: 1,\n      indicador_nome: 'ETIT',\n      anomes: 202510 // Exemplo, pode pegar da data\n    }\n  }\n};"
+            },
+            "name": "Transform Data",
+            "type": "n8n-nodes-base.function",
+            "typeVersion": 1,
+            "position": [
+                650,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "requestMethod": "POST",
+                "url": "=https://SEU_PROJETO.supabase.co/rest/v1/rpc/ingest_flat_indicador",
+                "headerParametersUi": {
+                    "parameter": [
+                        {
+                            "name": "apikey",
+                            "value": "SUA_CHAVE_ANON_OU_SERVICE"
+                        },
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer SUA_CHAVE_ANON_OU_SERVICE"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "jsonParameters": true,
+                "bodyParametersJson": "={{ JSON.stringify($json) }}"
+            },
+            "name": "Supabase RPC Call",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 1,
+            "position": [
+                850,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Start": {
+            "main": [
+                [
+                    {
+                        "node": "Read Excel File",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Read Excel File": {
+            "main": [
+                [
+                    {
+                        "node": "Transform Data",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Transform Data": {
+            "main": [
+                [
+                    {
+                        "node": "Supabase RPC Call",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

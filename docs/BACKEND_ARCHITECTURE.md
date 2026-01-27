@@ -26,6 +26,25 @@
         -   Coleta dados de fontes externas (SGO, GPON, Zabbix).
         -   Normaliza/Envia para o Backend (não escreve direto no banco).
 
+    ## Estrutura de Pastas
+
+    A organização do código segue o padrão modular do NestJS:
+
+    ```bash
+    backend/src/
+    ├── auth/                 # Guardião de Segurança (API Key)
+    │   └── api-key.guard.ts  # Valida o header 'x-api-key'
+    ├── incidents/            # Módulo Principal de Incidentes
+    │   ├── incidents.service.ts    # Lógica de Sync e Upsert
+    │   └── incidents.controller.ts # (Legado/Interno)
+    ├── ingestion/            # Endpoints de Ingestão (N8N)
+    │   └── ingestion.controller.ts # Recebe POST /ingestion/incident
+    ├── supabase/             # Cliente Supabase
+    │   └── supabase.service.ts     # Conexão com Service Role Key
+    ├── main.ts               # Entry Point (Configura Porta e CORS)
+    └── app.module.ts         # Orquestrador de Módulos
+    ```
+
     ## Fluxo de Dados
 
     `[Fontes Externas] -> [n8n] -> (HTTP POST) -> [NestJS Backend] -> (Upsert) -> [Supabase DB] -> (Realtime) -> [Frontend]`
@@ -94,9 +113,22 @@
     | `incidents` | INSERT   | Authenticated | **NEGADO** |
     | `incidents` | DELETE   | Authenticated | **NEGADO** |
 
-    ## Estratégia de Ingestão (n8n)
+    ## Estratégia de Ingestão (Full Sync)
 
-    Para garantir consistência, o fluxo do n8n deve:
-    1.  Receber dados da API externa.
-    2.  Mapear para o formato da tabela `incidents` (nomes de colunas exatos).
-    3.  Executar operação de **Upsert** no Supabase usando a chave composta `(nm_origem, id_mostra)`.
+    O sistema utiliza uma abordagem de **Sincronização Total (Full Sync)** para garantir que o banco de dados reflita exatamente o estado atual da origem.
+
+    ### Processo (`processBatch`):
+    1.  **Deduplicação de Entrada**:
+        -   O Backend recebe um lote (`batch`) de incidentes.
+        -   Para cada incidente, executa um **Upsert** (Insert ou Update) baseado na chave composta `(nm_origem, id_mostra)`.
+        -   Se o incidente existe, atualiza apenas os campos que mudaram (otimização de diff).
+        -   Se é novo, insere no banco.
+    
+    2.  **Limpeza de Excluídos (Deletions)**:
+        -   O sistema identifica todos os IDs que vieram no lote atual.
+        -   Busca no banco de dados todos os incidentes ativos daquela `nm_origem`.
+        -   Compara as listas: IDs que estão no banco mas **NÃO** vieram no lote são considerados "resolvidos/removidos" na origem.
+        -   O sistema **DELETA** esses registros do banco de dados automaticamente.
+
+    ### Vantagem:
+    Isso previne "incidentes fantasmas" (que foram fechados na origem mas o webhook de fechamento falhou ou nunca foi enviado). O estado final é sempre fiel ao último lote processado.

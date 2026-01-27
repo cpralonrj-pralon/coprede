@@ -26,7 +26,19 @@ const MOCK_BATCH = [
 
 async function runTest() {
     console.log('🚀 Starting Ingestion Test (ESM)...');
-    console.log(`Target: ${API_URL}`);
+
+    // 1. Test Health Check
+    try {
+        const rootUrl = API_URL.split('/ingestion')[0];
+        console.log(`Checking Health at: ${rootUrl}`);
+        const health = await fetch(rootUrl);
+        console.log(`Health Status: ${health.status}`);
+        console.log(`Health Msg: ${await health.text()}`);
+    } catch (e) {
+        console.error('⚠️ Health Check Failed:', e.message);
+    }
+
+    console.log(`\nTesting Target: ${API_URL}`);
 
     try {
         const response = await fetch(API_URL, {

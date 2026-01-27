@@ -9,6 +9,10 @@ import { OffenderMatrix } from './components/OffenderMatrix';
 import { IncidentMap } from '../../components/ui/IncidentMap';
 import { Button } from '../../components/ui/Button';
 import { IngestionLogsModal } from './components/IngestionLogsModal';
+import { AISummary } from '../../components/AISummary';
+
+import { AnomalyWatchdog } from '../../components/AnomalyWatchdog';
+import { AIChatWidget } from '../../components/AIChatWidget';
 
 export const DashboardController: React.FC = () => {
     const { session } = useAuth();
@@ -50,6 +54,15 @@ export const DashboardController: React.FC = () => {
 
     return (
         <div className="p-4 md:p-8 space-y-8 max-w-[1920px] mx-auto">
+            {/* Watchdog Alerts Layer */}
+            <AnomalyWatchdog />
+
+            {/* AI Chat Interaction Layer (Floating) */}
+            <AIChatWidget onFilterChange={(newFilters) => {
+                // Merge new filters with current state
+                setSgoFilters(prev => ({ ...prev, ...newFilters }));
+            }} />
+
             {/* Header */}
             <header className="flex justify-between items-center">
                 <div>
@@ -70,6 +83,8 @@ export const DashboardController: React.FC = () => {
                     </div>
                 </div>
             </header>
+
+            {/* AI Analyst Widget was here, removed */}
 
             {/* Filters Row with Logs Button */}
             <div className="flex flex-col lg:flex-row gap-4 justify-between items-end lg:items-center bg-[#0f172a] p-4 rounded-xl border border-gray-800 shadow-sm">
@@ -105,12 +120,12 @@ export const DashboardController: React.FC = () => {
 
                 <div className="xl:col-span-1 flex flex-col gap-6">
                     <EvolutionChart data={sgoMetrics.evolutionData} />
-                    <TopCitiesChart data={sgoMetrics.techData} />
+                    {/* Replaced TopCitiesChart with AI Analyst */}
+                    <AISummary />
                 </div>
             </div>
 
             {/* Matrix */}
-            {/* Matrix - Now receiving full incident list */}
             <OffenderMatrix incidents={incidents} />
 
             {/* Modal de Logs */}

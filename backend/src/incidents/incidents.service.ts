@@ -30,11 +30,11 @@ export class IncidentsService {
 
     async processBatch(payloads: IncidentPayload[]) {
         const stats = { processed: 0, inserted: 0, updated: 0, ignored: 0, deleted: 0, errors: 0 };
-        const videoIdsByOrigin: Record<string, string[]> = {};
+        const activeIdsByOrigin: Record<string, string[]> = {};
 
         // 1. Process Upserts & Collect IDs
         for (const data of payloads) {
-            // Track IDs by origin for sync
+            // Track IDs by origin for full-sync logic
             if (data.nm_origem && data.id_mostra) {
                 if (!videoIdsByOrigin[data.nm_origem]) {
                     videoIdsByOrigin[data.nm_origem] = [];

@@ -9,6 +9,8 @@ export const Navigation: React.FC = () => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
     { id: 'incident', label: 'Monitor', icon: 'monitoring' },
+    { id: 'indicators', label: 'Indicadores', icon: 'analytics' },
+    { id: 'recurrence', label: 'Reincidência', icon: 'repeat' },
     { id: 'users', label: 'Equipes', icon: 'group' },
     { id: 'alerts', label: 'Alertas', icon: 'notifications' },
     { id: 'reports', label: 'Relatórios', icon: 'description' },

@@ -18,9 +18,9 @@ No seu fluxo do n8n (após coletar os dados do Zabbix/SGO), adicione um node **H
 
 ### Configurações Principais
 
-*   **Method**: `POST`
-*   **URL**: `https://coprede-production.up.railway.app/ingestion/incident`
-*   **Authentication**: `Generic Credential Type` -> `Header Auth` (ou digite manualmente nos headers)
+    *   **Method**: `POST`
+    *   **URL**: `https://coprede-production.up.railway.app/ingestion/incident`
+    *   **Authentication**: `Generic Credential Type` -> `Header Auth` (ou digite manualmente nos headers)
 
 ### Headers
 
