@@ -10,7 +10,7 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function checkIncident() {
-    const idToCheck = '1493266';
+    const idToCheck = '1493395';
     console.log(`Checking for incident with ID containing: ${idToCheck}`);
 
     const { data, error } = await supabase
