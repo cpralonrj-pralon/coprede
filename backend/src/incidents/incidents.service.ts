@@ -42,9 +42,9 @@ export class IncidentsService {
                 }
 
                 if (!activeIdsByOrigin[data.nm_origem]) {
-                    videoIdsByOrigin[data.nm_origem] = [];
+                    activeIdsByOrigin[data.nm_origem] = [];
                 }
-                videoIdsByOrigin[data.nm_origem].push(String(data.id_mostra));
+                activeIdsByOrigin[data.nm_origem].push(String(data.id_mostra));
             }
 
             try {
@@ -60,8 +60,8 @@ export class IncidentsService {
         }
 
         // 2. Cleanup Missing (Full Sync)
-        for (const origin of Object.keys(videoIdsByOrigin)) {
-            const activeIds = videoIdsByOrigin[origin];
+        for (const origin of Object.keys(activeIdsByOrigin)) {
+            const activeIds = activeIdsByOrigin[origin];
             try {
                 const deletedCount = await this.cleanupMissingIncidents(origin, activeIds);
                 stats.deleted += deletedCount;
