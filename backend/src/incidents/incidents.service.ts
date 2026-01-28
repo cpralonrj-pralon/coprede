@@ -36,7 +36,12 @@ export class IncidentsService {
         for (const data of payloads) {
             // Track IDs by origin for full-sync logic
             if (data.nm_origem && data.id_mostra) {
-                if (!videoIdsByOrigin[data.nm_origem]) {
+                // DEBUG: Check timestamp for specific incident
+                if (data.id_mostra.includes('1493266')) {
+                    this.logger.warn(`🔍 DEBUG TIME [${data.id_mostra}]: Raw Input dh_inicio='${data.dh_inicio}'`);
+                }
+
+                if (!activeIdsByOrigin[data.nm_origem]) {
                     videoIdsByOrigin[data.nm_origem] = [];
                 }
                 videoIdsByOrigin[data.nm_origem].push(String(data.id_mostra));
@@ -148,7 +153,8 @@ export class IncidentsService {
         const fieldsToCheck = [
             'nm_status', 'ds_sumario', 'nm_cidade', 'regional',
             'cluster', 'subcluster', 'nm_cat_prod2', 'nm_cat_prod3',
-            'nm_cat_oper2', 'nm_cat_oper3', 'topologia', 'tp_topologia'
+            'nm_cat_oper2', 'nm_cat_oper3', 'topologia', 'tp_topologia',
+            'dh_inicio' // Allow updating start time if corrected
         ];
 
         for (const field of fieldsToCheck) {

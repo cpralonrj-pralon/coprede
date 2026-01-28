@@ -64,8 +64,36 @@ function pickFields(src) {
     const nm_tipo = getFirst(src.nm_tipo, src['6'], 'N/A');
     const nm_status = getFirst(src.nm_status, src['8'], 'N/A');
 
-    // Datas
-    const dh_inicio = getFirst(src.dh_inicio, src['11'], src.data_ini, null);
+    // Datas: Tenta corrigir o fuso horário (Assumindo BRT -03:00 se não vier nada)
+    let dh_inicio = getFirst(src.dh_inicio, src['11'], src.data_ini, null);
+
+    if (dh_inicio) {
+        // Se a data for string e não tiver indicação de fuso (Z ou + ou -), adiciona -03:00
+        const strDate = String(dh_inicio).trim();
+        const hasTimezone = strDate.includes('Z') || strDate.match(/[+-]\d{2}:?\d{2}$/);
+
+        if (!hasTimezone && strDate.length >= 10) {
+            // Tenta converter formato "DD/MM/YYYY HH:MM:ss" para ISO compativel
+            if (strDate.match(/^\d{2}\/\d{2}\/\d{4}/)) {
+                // Formato brasileiro DD/MM/YYYY
+                const [d, m, y, h, min, s] = strDate.split(/[\/\s:]/);
+                // Monta ISO: YYYY-MM-DDTHH:mm:ss-03:00
+                dh_inicio = `${y}-${m}-${d}T${h || '00'}:${min || '00'}:${s || '00'}-03:00`;
+            } else {
+                // Formato ISO simples (YYYY-MM-DD...) mas sem fuso
+                // Adiciona o offset BRT na força bruta se parece ser ISO
+                dh_inicio = strDate.replace(' ', 'T') + '-03:00';
+            }
+        }
+
+        try {
+            dh_inicio = new Date(dh_inicio).toISOString();
+        } catch (e) {
+            dh_inicio = new Date().toISOString(); // Fallback se falhar
+        }
+    } else {
+        dh_inicio = new Date().toISOString();
+    }
 
     // Sumário/Observação (limpando HTML)
     const ds_sumarioRaw = getFirst(src.ds_sumario, src['15'], src.obs, src.ticket_descricao, '');
@@ -95,7 +123,7 @@ function pickFields(src) {
         nm_origem,
         nm_tipo,
         nm_status,
-        dh_inicio: dh_inicio ? new Date(dh_inicio).toISOString() : new Date().toISOString(),
+        dh_inicio,
         ds_sumario,
         nm_cidade,
         topologia,
