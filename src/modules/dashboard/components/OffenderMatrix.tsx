@@ -79,6 +79,14 @@ export const OffenderMatrix: React.FC<OffenderMatrixProps> = ({ incidents }) => 
                             const over24 = isOver24h(inc.dh_inicio);
                             const isExpanded = expandedId === inc.id_mostra;
 
+                            // QRT Logic
+                            const summary = inc.ds_sumario?.toUpperCase() || '';
+                            const isQRT = summary.includes('#QRT#') || summary.includes('SUSPEITA DE QUEDA');
+                            // User Rule: Lose mark if status becomes DESIGNADO (or In Progress)
+                            const statusUpper = inc.nm_status?.toUpperCase() || '';
+                            const isWorkingOn = statusUpper.includes('DESIGNADO') || statusUpper.includes('PROGRESSO') || statusUpper.includes('ATENDIMENTO');
+                            const showQRTMark = isQRT && !isWorkingOn;
+
                             return (
                                 <React.Fragment key={inc.id_mostra || idx}>
                                     <tr className={`hover:bg-white/5 transition-colors group ${isExpanded ? 'bg-white/5' : ''}`}>
@@ -87,14 +95,23 @@ export const OffenderMatrix: React.FC<OffenderMatrixProps> = ({ incidents }) => 
                                                 onClick={() => toggleExpand(inc.id_mostra)}
                                                 className="flex flex-col items-start gap-1 group/btn focus:outline-none"
                                             >
-                                                <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-primary/20 border border-white/10 hover:border-primary/50 rounded-lg transition-all group-hover/btn:scale-105">
-                                                    <span className="font-black text-white text-xs tracking-wider group-hover/btn:text-primary transition-colors">
-                                                        {inc.id_mostra}
-                                                    </span>
-                                                    <span className="material-symbols-outlined text-[10px] text-gray-500 group-hover/btn:text-primary transition-colors">
-                                                        {isExpanded ? 'expand_less' : 'expand_more'}
-                                                    </span>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-primary/20 border border-white/10 hover:border-primary/50 rounded-lg transition-all group-hover/btn:scale-105">
+                                                        <span className="font-black text-white text-xs tracking-wider group-hover/btn:text-primary transition-colors">
+                                                            {inc.id_mostra}
+                                                        </span>
+                                                        <span className="material-symbols-outlined text-[10px] text-gray-500 group-hover/btn:text-primary transition-colors">
+                                                            {isExpanded ? 'expand_less' : 'expand_more'}
+                                                        </span>
+                                                    </div>
                                                 </div>
+
+                                                {showQRTMark && (
+                                                    <div className="mt-1 px-1.5 py-0.5 bg-orange-500/10 text-orange-500 text-[10px] font-black uppercase tracking-wider rounded border border-orange-500/20 flex items-center gap-1 animate-pulse">
+                                                        <span className="material-symbols-outlined text-[10px]">warning_amber</span>
+                                                        QRT
+                                                    </div>
+                                                )}
                                             </button>
                                             {isExpanded && (
                                                 <div className="mt-3 ml-1 text-xs text-gray-300 bg-surface-dark border-l-2 border-primary pl-3 py-2 animate-in fade-in slide-in-from-top-1">

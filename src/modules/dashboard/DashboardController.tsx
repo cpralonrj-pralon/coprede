@@ -9,10 +9,10 @@ import { OffenderMatrix } from './components/OffenderMatrix';
 import { IncidentMap } from '../../components/ui/IncidentMap';
 import { Button } from '../../components/ui/Button';
 import { IngestionLogsModal } from './components/IngestionLogsModal';
-import { AISummary } from '../../components/AISummary';
+import { QRTBreakdownCard } from './components/QRTBreakdownCard';
 
 import { AnomalyWatchdog } from '../../components/AnomalyWatchdog';
-import { AIChatWidget } from '../../components/AIChatWidget';
+
 
 export const DashboardController: React.FC = () => {
     const { session } = useAuth();
@@ -57,11 +57,7 @@ export const DashboardController: React.FC = () => {
             {/* Watchdog Alerts Layer */}
             <AnomalyWatchdog />
 
-            {/* AI Chat Interaction Layer (Floating) */}
-            <AIChatWidget onFilterChange={(newFilters) => {
-                // Merge new filters with current state
-                setSgoFilters(prev => ({ ...prev, ...newFilters }));
-            }} />
+
 
             {/* Header */}
             <header className="flex justify-between items-center">
@@ -120,8 +116,13 @@ export const DashboardController: React.FC = () => {
 
                 <div className="xl:col-span-1 flex flex-col gap-6">
                     <EvolutionChart data={sgoMetrics.evolutionData} />
-                    {/* Replaced TopCitiesChart with AI Analyst */}
-                    <AISummary />
+                    {/* QRT Monitor Widget */}
+                    <div className="flex-1 min-h-[300px]">
+                        <QRTBreakdownCard
+                            total={sgoMetrics.qrtCount}
+                            byGroup={sgoMetrics.qrtByGroup}
+                        />
+                    </div>
                 </div>
             </div>
 

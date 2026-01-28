@@ -40,6 +40,8 @@ export interface DashboardMetrics {
         stats: { name: string; count: number; percent: number }[];
     }[];
     outages: { market: string; type: string; count: number }[];
+    qrtCount: number;
+    qrtByGroup: { name: string; value: number }[];
 }
 
 // Fetch Incidents from Supabase (Real Data - Optimized)
@@ -58,12 +60,6 @@ export const fetchRawIncidents = async (): Promise<OperationalIncident[]> => {
         if (error) {
             console.error('Supabase Fetch Error:', error);
             throw error;
-        }
-
-        // Debug: Check if topologia is coming from DB
-        if (data && data.length > 0) {
-            console.log('🔍 API RAW DATA SAMPLE:', data[0]);
-            console.log('🔍 Topologia Check:', data.map(i => i.topologia).filter(Boolean).length, 'items with topology');
         }
 
         // Return empty array if no data yet (don't break UI)
@@ -121,28 +117,44 @@ export const fetchAnomalies = async (): Promise<AnomalyAlert[]> => {
 
 export const calculateMetrics = (incidents: OperationalIncident[]): DashboardMetrics => {
     const total = incidents.length;
-
-    // Logic: User Defined Rules
-    // Pendentes = PENDENTE, NOVO
-    // Tratadas = DESIGNADO, EM PROGRESSO
-
     let pending = 0;
     let treated = 0;
+    let qrtCount = 0;
+    const qrtByGroup: Record<string, number> = {};
 
     incidents.forEach(i => {
         const s = i.nm_status?.toUpperCase() || '';
+        const summary = i.ds_sumario?.toUpperCase() || '';
 
+        // Status Counts
         if (s.includes('PENDENTE') || s.includes('NOVO') || s.includes('OPEN')) {
             pending++;
         } else if (s.includes('DESIGNADO') || s.includes('PROGRESSO') || s.includes('EM ATENDIMENTO')) {
             treated++;
         }
-        // Others (e.g. CLOSED if they slip through) are ignored in these specific counters
+
+        // QRT Monitor
+        // Only count if it's a QRT incident AND it is NOT being worked on yet
+        if (summary.includes('#QRT#') || summary.includes('SUSPEITA DE QUEDA')) {
+            const statusUpper = i.nm_status?.toUpperCase() || '';
+            const isWorkingOn = statusUpper.includes('DESIGNADO') || statusUpper.includes('PROGRESSO') || statusUpper.includes('ATENDIMENTO');
+
+            if (!isWorkingOn) {
+                qrtCount++;
+                const g = i.grupo || 'OUTROS';
+                qrtByGroup[g] = (qrtByGroup[g] || 0) + 1;
+            }
+        }
     });
 
     // Efficiency: Treated / (Pending + Treated)
     const activeTotal = pending + treated;
     const efficiency = activeTotal > 0 ? `${Math.round((treated / activeTotal) * 100)}%` : '0%';
+
+    // Sort QRT Groups
+    const qrtByGroupSorted = Object.entries(qrtByGroup)
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value);
 
     // Evolution Data (hourly)
     const evolutionMap: Record<string, number> = {};
@@ -221,7 +233,9 @@ export const calculateMetrics = (incidents: OperationalIncident[]): DashboardMet
         availableMarkets,
         availableStatuses,
         topCities,
-        outages
+        outages,
+        qrtCount,
+        qrtByGroup: qrtByGroupSorted
     };
 };
 

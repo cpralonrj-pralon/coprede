@@ -7,6 +7,7 @@ interface KPIGridProps {
         pending: number;
         treated: number;
         efficiency: string;
+        qrtCount: number;
     };
 }
 
