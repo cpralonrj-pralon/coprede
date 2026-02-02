@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+// Force git tracking update
 import * as XLSX from 'xlsx';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -66,7 +67,7 @@ export const DataValidator: React.FC = () => {
     data.forEach((row, index) => {
       const rowErrors: string[] = [];
       const node = row['Node'] ? String(row['Node']).trim() : '';
-      
+
       // Validation Rule: Node must have exactly 7 numeric characters
       const cleanNode = node.replace(/[^0-9]/g, '');
       if (cleanNode.length !== 7) {
@@ -84,11 +85,11 @@ export const DataValidator: React.FC = () => {
         const cidade = row['Cidade'] || 'N/A';
         const distrito = row['Distrito'] || 'N/A';
         const headend = row['HeadEnd'] || 'N/A';
-        
+
         // Chave única para agrupar (pode ajustar conforme a necessidade do gráfico)
         // O usuário pediu gráfico por Área, Cidade/Distrito/Headend
-        const areaKey = `${cidade} - ${distrito}`; 
-        
+        const areaKey = `${cidade} - ${distrito}`;
+
         if (!areaMap.has(areaKey)) {
           areaMap.set(areaKey, {
             name: areaKey,
@@ -98,7 +99,7 @@ export const DataValidator: React.FC = () => {
             errorCount: 0
           });
         }
-        
+
         const currentStat = areaMap.get(areaKey)!;
         currentStat.errorCount++;
       }
@@ -106,16 +107,16 @@ export const DataValidator: React.FC = () => {
 
     setValidationResults(results);
     setStats(Array.from(areaMap.values()).sort((a, b) => b.errorCount - a.errorCount)); // Sort by errors desc
-    
+
     if (results.length === 0) {
-        setErrorHeader("Nenhum erro encontrado! Todos os registros estão válidos.");
+      setErrorHeader("Nenhum erro encontrado! Todos os registros estão válidos.");
     }
   };
 
   return (
     <div className="p-6 text-white min-h-screen">
       <h1 className="text-3xl font-bold mb-6">Validação de Dados - Excel</h1>
-      
+
       <div className="bg-surface-dark p-6 rounded-xl border border-white/5 mb-8">
         <div className="flex flex-col md:flex-row gap-4 items-end">
           <div className="flex-1">
@@ -137,19 +138,18 @@ export const DataValidator: React.FC = () => {
           <button
             onClick={processFile}
             disabled={!file || loading}
-            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-              !file || loading 
-                ? 'bg-gray-600 cursor-not-allowed' 
+            className={`px-6 py-2 rounded-lg font-medium transition-colors ${!file || loading
+                ? 'bg-gray-600 cursor-not-allowed'
                 : 'bg-green-600 hover:bg-green-700 text-white'
-            }`}
+              }`}
           >
             {loading ? 'Processando...' : 'Validar Planilha'}
           </button>
         </div>
         {errorHeader && (
-             <div className="mt-4 p-3 bg-blue-500/20 text-blue-300 rounded-lg">
-                 {errorHeader}
-             </div>
+          <div className="mt-4 p-3 bg-blue-500/20 text-blue-300 rounded-lg">
+            {errorHeader}
+          </div>
         )}
       </div>
 
@@ -163,9 +163,9 @@ export const DataValidator: React.FC = () => {
                   <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                   <XAxis type="number" stroke="#888" />
                   <YAxis dataKey="name" type="category" width={150} stroke="#888" fontSize={12} />
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
-                    cursor={{fill: 'rgba(255, 255, 255, 0.1)'}}
+                    cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
                   />
                   <Legend />
                   <Bar dataKey="errorCount" name="Registros Inválidos" fill="#ef4444" radius={[0, 4, 4, 0]} />
@@ -173,25 +173,25 @@ export const DataValidator: React.FC = () => {
               </ResponsiveContainer>
             </div>
           </div>
-          
+
           <div className="bg-surface-dark p-6 rounded-xl border border-white/5 overflow-y-auto max-h-[400px]">
-             <h2 className="text-xl font-semibold mb-4 text-yellow-400">Resumo de Erros</h2>
-             <table className="w-full text-left border-collapse">
-                 <thead>
-                     <tr className="border-b border-white/10 text-gray-400 text-sm">
-                         <th className="py-2">Área</th>
-                         <th className="py-2 text-right">Qtd. Erros</th>
-                     </tr>
-                 </thead>
-                 <tbody>
-                     {stats.map((stat, idx) => (
-                         <tr key={idx} className="border-b border-white/5 hover:bg-white/5">
-                             <td className="py-2 text-sm">{stat.name}</td>
-                             <td className="py-2 text-right font-mono text-red-400">{stat.errorCount}</td>
-                         </tr>
-                     ))}
-                 </tbody>
-             </table>
+            <h2 className="text-xl font-semibold mb-4 text-yellow-400">Resumo de Erros</h2>
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-white/10 text-gray-400 text-sm">
+                  <th className="py-2">Área</th>
+                  <th className="py-2 text-right">Qtd. Erros</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.map((stat, idx) => (
+                  <tr key={idx} className="border-b border-white/5 hover:bg-white/5">
+                    <td className="py-2 text-sm">{stat.name}</td>
+                    <td className="py-2 text-right font-mono text-red-400">{stat.errorCount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
@@ -221,9 +221,9 @@ export const DataValidator: React.FC = () => {
               </tbody>
             </table>
             {validationResults.length > 100 && (
-                <div className="p-4 text-center text-gray-500 italic">
-                    Mostrando apenas os primeiros 100 erros de {validationResults.length}.
-                </div>
+              <div className="p-4 text-center text-gray-500 italic">
+                Mostrando apenas os primeiros 100 erros de {validationResults.length}.
+              </div>
             )}
           </div>
         </div>
