@@ -11,9 +11,11 @@ export const Navigation: React.FC = () => {
     { id: 'incident', label: 'Monitor', icon: 'monitoring' },
     { id: 'indicators', label: 'Indicadores', icon: 'analytics' },
     { id: 'recurrence', label: 'Reincidência', icon: 'repeat' },
+    { id: 'logbook', label: 'Diário de Bordo', icon: 'book' },
     { id: 'users', label: 'Equipes', icon: 'group' },
     { id: 'alerts', label: 'Alertas', icon: 'notifications' },
     { id: 'reports', label: 'Relatórios', icon: 'description' },
+    { id: 'validator', label: 'Validador', icon: 'fact_check' },
   ];
 
   return (
