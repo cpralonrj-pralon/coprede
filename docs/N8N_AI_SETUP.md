@@ -1,4 +1,4 @@
-# Configuração do Analista de IA no n8n 🧠
+    # Configuração do Analista de IA no n8n 🧠
 
 Este guia explica como configurar o seu fluxo do n8n para ler os dados da nova **Tabela Master** (`coprede_master_incidents`) e alimentar a Inteligência Artificial.
 

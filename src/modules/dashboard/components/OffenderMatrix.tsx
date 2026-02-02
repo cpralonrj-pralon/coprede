@@ -25,8 +25,15 @@ export const OffenderMatrix: React.FC<OffenderMatrixProps> = ({ incidents }) => 
         return new Date(a.dh_inicio).getTime() - new Date(b.dh_inicio).getTime();
     }).slice(0, 50); // Show top 50 offenders
 
-    const isOver24h = (dateStr: string) => {
+    const isOver24h = (dateStr: string, status: string) => {
         if (!dateStr) return false;
+
+        // Rule: If already being worked on, it's not a "Critical Offender" anymore
+        const s = status?.toUpperCase() || '';
+        if (s.includes('DESIGNADO') || s.includes('PROGRESSO') || s.includes('ATENDIMENTO')) {
+            return false;
+        }
+
         try {
             const start = new Date(dateStr).getTime();
             const now = new Date().getTime();
@@ -76,7 +83,7 @@ export const OffenderMatrix: React.FC<OffenderMatrixProps> = ({ incidents }) => 
                     </thead>
                     <tbody className="divide-y divide-white/5">
                         {sortedIncidents.map((inc, idx) => {
-                            const over24 = isOver24h(inc.dh_inicio);
+                            const over24 = isOver24h(inc.dh_inicio, inc.nm_status);
                             const isExpanded = expandedId === inc.id_mostra;
 
                             // QRT Logic
