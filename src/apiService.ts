@@ -139,7 +139,8 @@ export const calculateMetrics = (incidents: OperationalIncident[]): DashboardMet
             const statusUpper = i.nm_status?.toUpperCase() || '';
             const isWorkingOn = statusUpper.includes('DESIGNADO') || statusUpper.includes('PROGRESSO') || statusUpper.includes('ATENDIMENTO');
 
-            if (!isWorkingOn) {
+            // User Request (2026-02-03): Only count QRT if status is specifically "NOVO"
+            if (statusUpper.includes('NOVO')) {
                 qrtCount++;
                 const g = i.grupo || 'OUTROS';
                 qrtByGroup[g] = (qrtByGroup[g] || 0) + 1;
