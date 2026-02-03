@@ -28,11 +28,7 @@ export const OffenderMatrix: React.FC<OffenderMatrixProps> = ({ incidents }) => 
     const isOver24h = (dateStr: string, status: string) => {
         if (!dateStr) return false;
 
-        // Rule: If already being worked on, it's not a "Critical Offender" anymore
-        const s = status?.toUpperCase() || '';
-        if (s.includes('DESIGNADO') || s.includes('PROGRESSO') || s.includes('ATENDIMENTO')) {
-            return false;
-        }
+        // Rule update: Removed status check. Now based purely on > 24h duration.
 
         try {
             const start = new Date(dateStr).getTime();
@@ -92,7 +88,9 @@ export const OffenderMatrix: React.FC<OffenderMatrixProps> = ({ incidents }) => 
                             // User Rule: Lose mark if status becomes DESIGNADO (or In Progress)
                             const statusUpper = inc.nm_status?.toUpperCase() || '';
                             const isWorkingOn = statusUpper.includes('DESIGNADO') || statusUpper.includes('PROGRESSO') || statusUpper.includes('ATENDIMENTO');
-                            const showQRTMark = isQRT && !isWorkingOn;
+
+                            // User Request (2026-02-03): Only show QRT if status is specifically "NOVO"
+                            const showQRTMark = isQRT && statusUpper.includes('NOVO');
 
                             return (
                                 <React.Fragment key={inc.id_mostra || idx}>

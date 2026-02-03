@@ -212,7 +212,7 @@ export const IncidentMap: React.FC<IncidentMapProps> = ({ incidents, height = '4
                             }}
                         >
                             <Popup className="custom-popup" closeButton={true}>
-                                <div className="p-3 min-w-[280px] font-sans">
+                                <div className="p-3 min-w-[280px] font-sans bg-[#FFFDD0] rounded-xl shadow-xl">
                                     {/* Header Row */}
                                     <div className="flex justify-between items-center mb-3">
                                         <h4 className="font-black text-gray-800 text-base uppercase tracking-tight">
