@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { MOCK_USERS } from '../constants';
 import { TeamMap } from '../components/TeamMap';
+import { ShiftScheduler } from '../components/ShiftScheduler';
 import { User } from '../types';
 
 type UserStatus = 'active' | 'inactive';
@@ -12,7 +13,7 @@ export const UserManagement: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingUser, setEditingUser] = useState<any | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'map' | 'schedule'>('list');
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
 
@@ -58,7 +59,7 @@ export const UserManagement: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-8">
+    <div className={`transition-all duration-500 ease-in-out ${viewMode === 'schedule' ? 'max-w-[95vw]' : 'max-w-4xl'} mx-auto p-4 md:p-8 space-y-8`}>
       <header className="flex justify-between items-center bg-surface-dark p-6 rounded-3xl border border-white/5 shadow-xl">
         <div className="flex flex-col">
           <h1 className="text-2xl font-bold text-white tracking-tight">Equipes</h1>
@@ -79,6 +80,13 @@ export const UserManagement: React.FC = () => {
             >
               <span className="material-symbols-outlined text-lg">map</span>
               <span className="text-xs font-bold">Mapa</span>
+            </button>
+            <button
+              onClick={() => setViewMode('schedule')}
+              className={`h-9 px-4 rounded-xl flex items-center gap-2 transition-all ${viewMode === 'schedule' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-gray-500 hover:text-white'}`}
+            >
+              <span className="material-symbols-outlined text-lg">calendar_month</span>
+              <span className="text-xs font-bold">Escala</span>
             </button>
           </div>
           <button
@@ -133,7 +141,8 @@ export const UserManagement: React.FC = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center px-2">
           <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">
-            {viewMode === 'list' ? `Colaboradores (${filteredUsers.length})` : 'Densidade Geográfica'}
+            {viewMode === 'list' ? `Colaboradores (${filteredUsers.length})` :
+              viewMode === 'map' ? 'Densidade Geográfica' : 'Escala Operacional'}
           </p>
           {viewMode === 'map' && (
             <p className="text-[10px] text-primary font-black uppercase tracking-tighter bg-primary/10 px-2 py-0.5 rounded border border-primary/20 animate-pulse">
@@ -198,8 +207,10 @@ export const UserManagement: React.FC = () => {
               </div>
             ))}
           </div>
-        ) : (
+        ) : viewMode === 'map' ? (
           <TeamMap users={filteredUsers} />
+        ) : (
+          <ShiftScheduler users={filteredUsers} />
         )}
       </div>
 

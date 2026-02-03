@@ -49,6 +49,7 @@ export const Logbook: React.FC = () => {
     const statusOptions = ['Aberto', 'Em Análise', 'Resolvido'];
 
     useEffect(() => {
+        console.log('Logbook API_URL:', API_URL);
         loadData();
     }, [categoriaFilter, statusFilter]);
 

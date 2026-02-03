@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { fetchRawIncidents, fetchGponEvents, calculateSgoMetrics, ApiIncident, OperationalIncident } from '../../../apiService';
 import { GponEvent } from '../../../types';
@@ -8,6 +9,7 @@ export const useDashboardData = () => {
     const [sgoIncidents, setSgoIncidents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
 
     // Filter States
     const [sgoFilters, setSgoFilters] = useState({
@@ -60,6 +62,7 @@ export const useDashboardData = () => {
 
             setAllIncidents(data);
             setSgoIncidents(mappedData);
+            setLastUpdateTime(new Date());
             setError(null);
         } catch (err: any) {
             console.error('Data Load Error:', err);
@@ -217,6 +220,7 @@ export const useDashboardData = () => {
         sgoFilters,
         setSgoFilters,
         options,
-        refresh: loadData
+        refresh: loadData,
+        lastUpdateTime
     };
 };

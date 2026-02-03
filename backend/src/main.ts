@@ -24,7 +24,9 @@ async function bootstrap() {
     }));
 
     const port = process.env.PORT || 3000;
-    await app.listen(port, '0.0.0.0');
+    // Listen on all interfaces (IPv4 and IPv6)
+    // Removing explicit '0.0.0.0' allows Node to bind to :: which often supports both
+    await app.listen(port);
     console.log(`Backend running on port ${port}`);
 }
 bootstrap();

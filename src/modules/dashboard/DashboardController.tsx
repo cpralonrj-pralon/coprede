@@ -24,7 +24,8 @@ export const DashboardController: React.FC = () => {
         setSgoFilters,
         options,
         refresh,
-        incidents
+        incidents,
+        lastUpdateTime
     } = useDashboardData();
 
     // Logs Modal State
@@ -65,6 +66,11 @@ export const DashboardController: React.FC = () => {
                     <div className="flex items-center gap-2 mb-1">
                         <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Painel Operacional</p>
                         <span className="bg-success/20 text-success text-[10px] font-black px-1.5 py-0.5 rounded border border-success/20 animate-pulse">LIVE</span>
+                        {lastUpdateTime && (
+                            <span className="text-[10px] text-gray-500 font-medium ml-2">
+                                Atualizado às {lastUpdateTime.toLocaleTimeString()}
+                            </span>
+                        )}
                     </div>
                     <h1 className="text-3xl font-bold text-white tracking-tight">Visão Geral</h1>
                 </div>
