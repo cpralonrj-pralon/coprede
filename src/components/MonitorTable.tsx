@@ -67,6 +67,11 @@ export const MonitorTable: React.FC<MonitorTableProps> = ({ onSelect }) => {
                     };
                 });
 
+                // Sort by Date Descending (Newest First)
+                normalizedData.sort((a, b) => {
+                    return new Date(b.dataRaw).getTime() - new Date(a.dataRaw).getTime();
+                });
+
                 setData(normalizedData);
             } catch (err: any) {
                 console.error('Error fetching monitor data:', err);
@@ -77,7 +82,7 @@ export const MonitorTable: React.FC<MonitorTableProps> = ({ onSelect }) => {
         };
 
         loadData();
-        const interval = setInterval(loadData, 300000); // 5 min
+        const interval = setInterval(loadData, 10000); // 10 seconds (Real-time)
         return () => clearInterval(interval);
     }, []);
 

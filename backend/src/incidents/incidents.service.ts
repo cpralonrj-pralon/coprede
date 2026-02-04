@@ -19,6 +19,8 @@ export interface IncidentPayload {
     nm_cat_prod3?: string;
     nm_cat_oper2?: string;
     nm_cat_oper3?: string;
+    nm_organizacao_tratamento?: string;
+    nm_grupo_tratamento?: string;
     payload?: any;
 }
 
@@ -36,11 +38,6 @@ export class IncidentsService {
         for (const data of payloads) {
             // Track IDs by origin for full-sync logic
             if (data.nm_origem && data.id_mostra) {
-                // DEBUG: Check timestamp for specific incident
-                if (data.id_mostra.includes('1493266')) {
-                    this.logger.warn(`🔍 DEBUG TIME [${data.id_mostra}]: Raw Input dh_inicio='${data.dh_inicio}'`);
-                }
-
                 if (!activeIdsByOrigin[data.nm_origem]) {
                     activeIdsByOrigin[data.nm_origem] = [];
                 }
@@ -149,22 +146,29 @@ export class IncidentsService {
 
         // 3. Update if existing (smart diff)
         const updates: any = {};
-        let hasChanges = false;
+        const changes: { field: string; oldVal: any; newVal: any }[] = [];
+
         const fieldsToCheck = [
             'nm_status', 'ds_sumario', 'nm_cidade', 'regional',
             'cluster', 'subcluster', 'nm_cat_prod2', 'nm_cat_prod3',
             'nm_cat_oper2', 'nm_cat_oper3', 'topologia', 'tp_topologia',
+            'nm_organizacao_tratamento', 'nm_grupo_tratamento',
             'dh_inicio' // Allow updating start time if corrected
         ];
 
         for (const field of fieldsToCheck) {
+            // Check for strict inequality (handling undefined)
             if (data[field] !== undefined && data[field] !== existing[field]) {
                 updates[field] = data[field];
-                hasChanges = true;
+                changes.push({
+                    field,
+                    oldVal: existing[field],
+                    newVal: data[field]
+                });
             }
         }
 
-        if (!hasChanges) {
+        if (changes.length === 0) {
             return { action: 'ignored', id: existing.id };
         }
 
@@ -179,12 +183,15 @@ export class IncidentsService {
 
         if (updateError) throw updateError;
 
-        // 4. History Logging (Key fields only)
-        if (updates.nm_status) {
-            await this.logHistory(existing.id, 'nm_status', existing.nm_status, updates.nm_status);
-        }
-        if (updates.ds_sumario) {
-            await this.logHistory(existing.id, 'ds_sumario', existing.ds_sumario, updates.ds_sumario);
+        // 4. History Logging (All changed fields)
+        // Fire-and-forget logging for all detected changes
+        for (const change of changes) {
+            await this.logHistory(
+                existing.id,
+                change.field,
+                String(change.oldVal ?? ''), // Ensure string format
+                String(change.newVal ?? '')
+            );
         }
 
         return { action: 'updated', id: existing.id };

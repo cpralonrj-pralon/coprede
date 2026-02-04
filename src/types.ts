@@ -57,6 +57,10 @@ export interface OperationalIncident {
   cluster: string;
   subcluster: string;
 
+  nm_organizacao_tratamento?: string;
+  nm_grupo_tratamento?: string;
+  nm_area_responsavel?: string;
+
   created_at: string;
   updated_at: string;
 }

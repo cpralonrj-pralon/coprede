@@ -1,12 +1,14 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-export type ViewType = 'login' | 'dashboard' | 'incident' | 'users' | 'alerts' | 'reports' | 'validator' | 'recurrence' | 'indicators' | 'logbook';
+export type ViewType = 'login' | 'dashboard' | 'incident' | 'users' | 'alerts' | 'reports' | 'validator' | 'recurrence' | 'indicators' | 'logbook' | 'analysis' | 'incident_detail';
 
 interface AppContextType {
     currentView: ViewType;
     setView: (view: ViewType) => void;
     toggleTheme: () => void;
     isDarkMode: boolean;
+    selectedIncidentId: string | null;
+    setSelectedIncidentId: (id: string | null) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -14,6 +16,8 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [currentView, setCurrentView] = useState<ViewType>('dashboard');
     const [isDarkMode, setIsDarkMode] = useState(true); // Default dark
+
+    const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
 
     const setView = (view: ViewType) => {
         setCurrentView(view);
@@ -25,7 +29,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
 
     return (
-        <AppContext.Provider value={{ currentView, setView, toggleTheme, isDarkMode }}>
+        <AppContext.Provider value={{ currentView, setView, toggleTheme, isDarkMode, selectedIncidentId, setSelectedIncidentId }}>
             {children}
         </AppContext.Provider>
     );

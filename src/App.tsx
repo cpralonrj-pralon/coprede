@@ -13,6 +13,8 @@ import { Indicators } from './pages/Indicators';
 import { Recurrence } from './pages/Recurrence';
 import { DataValidator } from './pages/DataValidator';
 import { Logbook } from './pages/Logbook';
+import { IncidentDetail } from './pages/IncidentDetail';
+import { Analysis } from './pages/Analysis';
 
 const MainLayout: React.FC = () => {
   const { isAuthenticated, login, loading } = useAuth();
@@ -46,6 +48,8 @@ const MainLayout: React.FC = () => {
         {currentView === 'alerts' && <Alerts />}
         {currentView === 'reports' && <Reports />}
         {currentView === 'validator' && <DataValidator />}
+        {currentView === 'incident_detail' && <IncidentDetail onBack={() => setView('dashboard')} />}
+        {currentView === 'analysis' && <Analysis />}
       </main>
     </div>
   );

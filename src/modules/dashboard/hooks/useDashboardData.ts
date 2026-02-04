@@ -27,10 +27,19 @@ export const useDashboardData = () => {
             // Fetch Real Data from Supabase
             const data = await fetchRawIncidents();
 
-            // Transform OperationalIncident[] to UI format if needed, or use directly
-            // The UI currently expects fields like 'ticket', 'incidente', etc. from previous SGO mock
-            // We map OperationalIncident to this format
-            const mappedData = data.map(i => ({
+            // Filter for Dashboard Scope (User Request: Optical & GPON/NODE only)
+            const dashboardData = data.filter(i => {
+                const prod2 = (i.nm_cat_prod2 || '').toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                const prod3 = (i.nm_cat_prod3 || '').toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+                const isOptical = prod2 === 'REDE OPTICA';
+                const isGponOrNode = prod3.includes('GPON') || prod3.includes('NODE');
+
+                return isOptical && isGponOrNode;
+            });
+
+            // Map the FILTERED data
+            const mappedData = dashboardData.map(i => ({
                 ticket: i.id_mostra,
                 incidente: i.nm_tipo,
                 sintoma: i.ds_sumario || i.nm_tipo,
@@ -42,13 +51,12 @@ export const useDashboardData = () => {
                 tecnologia: i.nm_cat_prod3 || 'N/A',
                 rede: i.nm_cat_prod2 || 'N/A',
                 sintomaOper: i.nm_cat_oper2 || 'N/A',
-                impacto: 'MÉDIO', // Logic needed based on status/severity
+                impacto: 'MÉDIO',
                 regional: i.regional,
                 grupo: i.grupo,
                 cluster: i.cluster,
                 subcluster: i.subcluster,
 
-                // Keep original fields for internals
                 id_mostra: i.id_mostra,
                 nm_origem: i.nm_origem,
                 nm_status: i.nm_status,
@@ -57,10 +65,14 @@ export const useDashboardData = () => {
                 dh_inicio: i.dh_inicio,
                 ds_sumario: i.ds_sumario,
                 regional_raw: i.regional,
-                topologia: i.topologia // Explicitly pass topologia
+                topologia: i.topologia
             }));
 
-            setAllIncidents(data);
+            // Store original data in allIncidents but verify if DashboardController uses it directly?
+            // Actually, DashboardController uses sgoMetrics which uses filteredIncidents from sgoIncidents.
+            // Using dashboardData here ensures the metrics are calculated only on this subset.
+
+            setAllIncidents(dashboardData);
             setSgoIncidents(mappedData);
             setLastUpdateTime(new Date());
             setError(null);

@@ -112,6 +112,66 @@ export const fetchAnomalies = async (): Promise<AnomalyAlert[]> => {
     }
 };
 
+// Fetch the single most recently modified incident (for Auto-Analysis)
+export const fetchLatestChangedIncident = async (): Promise<OperationalIncident | null> => {
+    try {
+        // We use 'created_at' to catch new insertions (Most reliable for "Just Arrived")
+        const { data, error } = await supabase
+            .from('incidents')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+        if (error) {
+            console.error('Error fetching latest incident:', error);
+            return null;
+        }
+        return data && data.length > 0 ? (data[0] as OperationalIncident) : null;
+    } catch (e) {
+        console.error('Unexpected error fetching latest:', e);
+        return null;
+    }
+};
+
+// Fetch the last N most recently created incidents for the "Stack" view
+export const fetchRecentIngestions = async (limit: number = 10): Promise<OperationalIncident[]> => {
+    try {
+        const { data, error } = await supabase
+            .from('incidents')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(limit);
+
+        if (error) {
+            console.error('Error fetching recent ingestions:', error);
+            return [];
+        }
+        return (data as OperationalIncident[]) || [];
+    } catch (e) {
+        console.error('Unexpected error fetching recent ingestions:', e);
+        return [];
+    }
+};
+
+export const fetchIncidentHistory = async (incidentId: string): Promise<any[]> => {
+    try {
+        const { data, error } = await supabase
+            .from('incident_history')
+            .select('*')
+            .eq('incident_id', incidentId)
+            .order('alterado_em', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching history:', error);
+            return [];
+        }
+        return data || [];
+    } catch (e) {
+        console.error('Unexpected error fetching history:', e);
+        return [];
+    }
+};
+
 // --- METRIC CALCULATORS ---
 // Adapted to work with OperationalIncident
 

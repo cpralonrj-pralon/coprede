@@ -69,6 +69,14 @@ class CreateIncidentDto {
     @IsString()
     @IsOptional()
     nm_cat_oper3?: string;
+
+    @IsString()
+    @IsOptional()
+    nm_organizacao_tratamento?: string;
+
+    @IsString()
+    @IsOptional()
+    nm_grupo_tratamento?: string;
 }
 
 @Controller('ingestion')
