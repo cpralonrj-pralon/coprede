@@ -23,7 +23,7 @@ export const OffenderMatrix: React.FC<OffenderMatrixProps> = ({ incidents }) => 
     // Sort by Duration (Oldest first) implies "Offender" logic
     const sortedIncidents = [...incidents].sort((a, b) => {
         return new Date(a.dh_inicio).getTime() - new Date(b.dh_inicio).getTime();
-    }).slice(0, 50); // Show top 50 offenders
+    }).slice(0, 100); // Show top 100 offenders
 
     const isOver24h = (dateStr: string, status: string) => {
         if (!dateStr) return false;
@@ -62,7 +62,7 @@ export const OffenderMatrix: React.FC<OffenderMatrixProps> = ({ incidents }) => 
     return (
         <section className="space-y-6">
             <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white">Matriz de Ofensores (Top 50 Antigos)</h2>
+                <h2 className="text-xl font-bold text-white">Matriz de Ofensores (Top 100 Antigos)</h2>
             </div>
 
             <div className="overflow-x-auto rounded-3xl border border-white/5 bg-surface-dark/50">

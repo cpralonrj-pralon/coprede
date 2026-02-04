@@ -84,7 +84,7 @@ export const RecurrenceCharts = ({ refreshTrigger, filters = {} }: RecurrenceCha
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Chart 1: Top Offenders */}
                     <div className="bg-surface-dark border border-white/5 rounded-3xl p-6 h-[500px] flex flex-col">
-                        <h3 className="text-lg font-bold text-white mb-4">🏆 Top 10 Ofensores (Nodes)</h3>
+                        <h3 className="text-lg font-bold text-white mb-4">🏆 Top 100 Ofensores (Nodes)</h3>
                         <div className="flex-1 w-full min-h-0">
                             {topOffenders.length > 0 ? (
                                 <ResponsiveContainer width="100%" height="100%">
