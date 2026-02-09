@@ -259,7 +259,7 @@ export const RecurrenceUpload = ({ onUploadComplete }: { onUploadComplete: () =>
             </h2>
             <form onSubmit={handleUpload} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
                 <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">Arquivo 1: Incidentes</label>
+                    <label htmlFor="file-incidents" className="block text-sm font-medium text-gray-400 mb-2">Arquivo 1: Incidentes</label>
                     <input id="file-incidents" type="file" accept=".csv, .xlsx, .xls" className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-black hover:file:bg-primary/80" />
                     {progress.incidents > 0 && (
                         <div className="mt-2">
@@ -271,7 +271,7 @@ export const RecurrenceUpload = ({ onUploadComplete }: { onUploadComplete: () =>
                     )}
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">Arquivo 2: Abrangência (Nodes)</label>
+                    <label htmlFor="file-coverage" className="block text-sm font-medium text-gray-400 mb-2">Arquivo 2: Abrangência (Nodes)</label>
                     <input id="file-coverage" type="file" accept=".csv, .xlsx, .xls" className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-black hover:file:bg-primary/80" />
                     {progress.coverage > 0 && (
                         <div className="mt-2">

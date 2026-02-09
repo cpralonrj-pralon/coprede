@@ -120,10 +120,11 @@ export const DataValidator: React.FC = () => {
       <div className="bg-surface-dark p-6 rounded-xl border border-white/5 mb-8">
         <div className="flex flex-col md:flex-row gap-4 items-end">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-400 mb-2">
+            <label htmlFor="file-upload-validator" className="block text-sm font-medium text-gray-400 mb-2">
               Selecione o arquivo Excel (.xlsx, .xls, .csv)
             </label>
             <input
+              id="file-upload-validator"
               type="file"
               accept=".xlsx,.xls,.csv"
               onChange={handleFileUpload}
@@ -139,8 +140,8 @@ export const DataValidator: React.FC = () => {
             onClick={processFile}
             disabled={!file || loading}
             className={`px-6 py-2 rounded-lg font-medium transition-colors ${!file || loading
-                ? 'bg-gray-600 cursor-not-allowed'
-                : 'bg-green-600 hover:bg-green-700 text-white'
+              ? 'bg-gray-600 cursor-not-allowed'
+              : 'bg-green-600 hover:bg-green-700 text-white'
               }`}
           >
             {loading ? 'Processando...' : 'Validar Planilha'}

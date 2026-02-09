@@ -143,6 +143,7 @@ export const Analysis: React.FC = () => {
 
         // Iterate through events to define hops
         // A hop changes when relevant fields change
+        const calculatedHops: any[] = [];
         for (let i = 0; i < history.length; i++) {
             const event = history[i];
             const eventDate = new Date(event.changed_at || event.alterado_em);

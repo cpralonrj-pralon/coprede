@@ -27,12 +27,19 @@ export const useDashboardData = () => {
             // Fetch Real Data from Supabase
             const data = await fetchRawIncidents();
 
-            // Filter for Dashboard Scope (User Request: Optical & GPON/NODE only)
+            // Filter for Dashboard Scope (User Rules Applied)
             const dashboardData = data.filter(i => {
                 const prod2 = (i.nm_cat_prod2 || '').toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                 const prod3 = (i.nm_cat_prod3 || '').toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                const oper2 = (i.nm_cat_oper2 || '').toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                const summary = (i.ds_sumario || '').toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                const status = (i.nm_status || '').toUpperCase();
 
-                const isOptical = prod2 === 'REDE OPTICA';
+                // Rule 1: nm_cat_prod2 must contain "REDE OPTICA" 
+                // (n8n usually handles this, but we keep a safety check for the Dashboard scope)
+                const isOptical = prod2.includes('REDE OPTICA') || prod2.includes('OPTICA');
+
+                // Rule 2: nm_cat_prod3 must contain "GPON" OR "NODE"
                 const isGponOrNode = prod3.includes('GPON') || prod3.includes('NODE');
 
                 return isOptical && isGponOrNode;

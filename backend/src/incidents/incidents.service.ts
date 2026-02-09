@@ -31,7 +31,7 @@ export class IncidentsService {
     constructor(private readonly supabase: SupabaseService) { }
 
     async processBatch(payloads: IncidentPayload[]) {
-        const stats = { processed: 0, inserted: 0, updated: 0, ignored: 0, deleted: 0, errors: 0 };
+        const stats = { processed: 0, inserted: 0, updated: 0, ignored: 0, deleted: 0, errors: 0, errorDetails: [] };
         const activeIdsByOrigin: Record<string, string[]> = {};
 
         // 1. Process Upserts & Collect IDs
@@ -52,6 +52,7 @@ export class IncidentsService {
             } catch (e) {
                 this.logger.error(`Error processing incident ${data.id_mostra}: ${e.message}`);
                 stats.errors++;
+                stats.errorDetails.push(`Id ${data.id_mostra}: ${e.message}`);
             }
             stats.processed++;
         }

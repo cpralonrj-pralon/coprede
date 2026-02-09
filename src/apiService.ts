@@ -50,12 +50,12 @@ export const fetchRawIncidents = async (): Promise<OperationalIncident[]> => {
         const { data, error } = await supabase
             .from('incidents')
             .select('*')
-            // Filter out closed incidents to optimize initial load
-            .not('nm_status', 'ilike', '%fechado%')
-            .not('nm_status', 'ilike', '%normalizado%')
-            .not('nm_status', 'ilike', '%finalizado%')
+            // Filter out closed incidents (temporarily disabled for debug of 400 error)
+            // .not('nm_status', 'ilike', '%fechado%')
+            // .not('nm_status', 'ilike', '%normalizado%')
+            // .not('nm_status', 'ilike', '%finalizado%')
             .order('dh_inicio', { ascending: false })
-            .limit(1000); // Safety limit for extreme cases
+            .limit(100); // Reduce limit for debug
 
         if (error) {
             console.error('Supabase Fetch Error:', error);

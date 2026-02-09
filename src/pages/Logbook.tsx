@@ -199,6 +199,7 @@ export const Logbook: React.FC = () => {
                 {/* Filters */}
                 <div className="flex gap-4 flex-wrap">
                     <select
+                        aria-label="Filtrar por Categoria"
                         value={categoriaFilter}
                         onChange={(e) => setCategoriaFilter(e.target.value)}
                         className="px-4 py-2 bg-surface-dark border border-white/10 rounded-lg text-white focus:border-primary focus:outline-none"
@@ -210,6 +211,7 @@ export const Logbook: React.FC = () => {
                     </select>
 
                     <select
+                        aria-label="Filtrar por Status"
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
                         className="px-4 py-2 bg-surface-dark border border-white/10 rounded-lg text-white focus:border-primary focus:outline-none"
@@ -339,8 +341,9 @@ export const Logbook: React.FC = () => {
                     </h2>
                     <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Título</label>
+                            <label htmlFor="logbook-titulo" className="block text-sm font-medium text-gray-300 mb-2">Título</label>
                             <input
+                                id="logbook-titulo"
                                 type="text"
                                 required
                                 maxLength={200}
@@ -352,8 +355,9 @@ export const Logbook: React.FC = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Data</label>
+                            <label htmlFor="logbook-data" className="block text-sm font-medium text-gray-300 mb-2">Data</label>
                             <input
+                                id="logbook-data"
                                 type="date"
                                 required
                                 value={formData.data}
@@ -363,8 +367,9 @@ export const Logbook: React.FC = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Horário</label>
+                            <label htmlFor="logbook-horario" className="block text-sm font-medium text-gray-300 mb-2">Horário</label>
                             <input
+                                id="logbook-horario"
                                 type="time"
                                 required
                                 value={formData.horario}
@@ -374,8 +379,9 @@ export const Logbook: React.FC = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Categoria</label>
+                            <label htmlFor="logbook-categoria" className="block text-sm font-medium text-gray-300 mb-2">Categoria</label>
                             <select
+                                id="logbook-categoria"
                                 required
                                 value={formData.categoria}
                                 onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
@@ -389,8 +395,9 @@ export const Logbook: React.FC = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
+                            <label htmlFor="logbook-status" className="block text-sm font-medium text-gray-300 mb-2">Status</label>
                             <select
+                                id="logbook-status"
                                 required
                                 value={formData.status}
                                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
@@ -403,8 +410,9 @@ export const Logbook: React.FC = () => {
                         </div>
 
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Descrição</label>
+                            <label htmlFor="logbook-descricao" className="block text-sm font-medium text-gray-300 mb-2">Descrição</label>
                             <textarea
+                                id="logbook-descricao"
                                 required
                                 value={formData.descricao}
                                 onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
@@ -415,8 +423,9 @@ export const Logbook: React.FC = () => {
                         </div>
 
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Impacto</label>
+                            <label htmlFor="logbook-impacto" className="block text-sm font-medium text-gray-300 mb-2">Impacto</label>
                             <textarea
+                                id="logbook-impacto"
                                 value={formData.impacto}
                                 onChange={(e) => setFormData({ ...formData, impacto: e.target.value })}
                                 placeholder="Descreva o impacto no operacional..."
