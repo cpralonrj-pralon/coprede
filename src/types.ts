@@ -1,16 +1,23 @@
 export interface User {
   id: string;
   email: string;
-  role: 'admin' | 'operator' | 'viewer';
-  name?: string;
+  role: string;
+  name: string;
+  status: 'active' | 'inactive';
+  address?: string;
+  avatar?: string;
+  initials?: string;
 }
 
 export interface Incident {
   id: string;
   title: string;
-  status: 'open' | 'closed' | 'investigating';
-  severity: 'critical' | 'high' | 'medium' | 'low';
-  createdAt: string;
+  status: string;
+  severity?: 'critical' | 'high' | 'medium' | 'low';
+  createdAt?: string;
+  location?: string;
+  time?: string;
+  type?: string;
 }
 
 export type ApiIncident = Incident; // Alias for compatibility

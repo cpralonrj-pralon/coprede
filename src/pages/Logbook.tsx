@@ -274,7 +274,7 @@ export const Logbook: React.FC = () => {
                                     contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
                                     labelStyle={{ color: '#F3F4F6' }}
                                     itemStyle={{ color: '#7C3AED' }}
-                                    labelFormatter={formatMonthLabel}
+                                    labelFormatter={(value) => formatMonthLabel(String(value))}
                                 />
                                 <Bar dataKey="count" fill="#7C3AED" radius={[8, 8, 0, 0]} />
                             </BarChart>
@@ -294,7 +294,8 @@ export const Logbook: React.FC = () => {
                                     cx="50%"
                                     cy="50%"
                                     labelLine={false}
-                                    label={({ categoria, percent }) => `${categoria} (${(percent * 100).toFixed(0)}%)`}
+                                    nameKey="categoria"
+                                    label={({ categoria, percent }: any) => `${categoria} (${((percent || 0) * 100).toFixed(0)}%)`}
                                     outerRadius={80}
                                     fill="#8884d8"
                                     dataKey="count"

@@ -104,6 +104,7 @@ export const UserManagement: React.FC = () => {
         </div>
         <input
           type="text"
+          aria-label="Buscar usuários"
           placeholder="Buscar por nome, e-mail ou matrícula"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -272,6 +273,7 @@ export const UserManagement: React.FC = () => {
                   id="avatar-upload"
                   type="file"
                   accept="image/*"
+                  aria-label="Upload de avatar"
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
@@ -286,20 +288,20 @@ export const UserManagement: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-black uppercase text-gray-500 tracking-widest">Nome Completo</label>
-                <input name="name" required type="text" className="w-full bg-[#1a0f10] border border-white/5 rounded-2xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-primary transition-all" />
+                <label htmlFor="new-user-name" className="text-xs font-black uppercase text-gray-500 tracking-widest">Nome Completo</label>
+                <input id="new-user-name" name="name" required type="text" className="w-full bg-[#1a0f10] border border-white/5 rounded-2xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-primary transition-all" />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-black uppercase text-gray-500 tracking-widest">E-mail</label>
-                <input name="email" required type="email" className="w-full bg-[#1a0f10] border border-white/5 rounded-2xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-primary transition-all" />
+                <label htmlFor="new-user-email" className="text-xs font-black uppercase text-gray-500 tracking-widest">E-mail</label>
+                <input id="new-user-email" name="email" required type="email" className="w-full bg-[#1a0f10] border border-white/5 rounded-2xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-primary transition-all" />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-black uppercase text-gray-500 tracking-widest">Endereço</label>
-                <input name="address" required type="text" className="w-full bg-[#1a0f10] border border-white/5 rounded-2xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-primary transition-all" />
+                <label htmlFor="new-user-address" className="text-xs font-black uppercase text-gray-500 tracking-widest">Endereço</label>
+                <input id="new-user-address" name="address" required type="text" className="w-full bg-[#1a0f10] border border-white/5 rounded-2xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-primary transition-all" />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-black uppercase text-gray-500 tracking-widest">Cargo/Função</label>
-                <select name="role" required className="w-full bg-[#1a0f10] border border-white/5 rounded-2xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-primary transition-all">
+                <label htmlFor="new-user-role" className="text-xs font-black uppercase text-gray-500 tracking-widest">Cargo/Função</label>
+                <select id="new-user-role" name="role" required className="w-full bg-[#1a0f10] border border-white/5 rounded-2xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-primary transition-all">
                   <option value="Operador NOC">Operador NOC</option>
                   <option value="Supervisor N2">Supervisor N2</option>
                   <option value="Técnico de Campo">Técnico de Campo</option>
@@ -360,6 +362,7 @@ export const UserManagement: React.FC = () => {
                   id="edit-avatar-upload"
                   type="file"
                   accept="image/*"
+                  aria-label="Upload de avatar para edição"
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
@@ -374,20 +377,20 @@ export const UserManagement: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-black uppercase text-gray-500 tracking-widest">Nome Completo</label>
-                <input name="name" defaultValue={editingUser.name} required type="text" className="w-full bg-[#1a0f10] border border-white/5 rounded-2xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-primary transition-all" />
+                <label htmlFor="edit-user-name" className="text-xs font-black uppercase text-gray-500 tracking-widest">Nome Completo</label>
+                <input id="edit-user-name" name="name" defaultValue={editingUser.name} required type="text" className="w-full bg-[#1a0f10] border border-white/5 rounded-2xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-primary transition-all" />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-black uppercase text-gray-500 tracking-widest">E-mail</label>
-                <input name="email" defaultValue={editingUser.email} required type="email" className="w-full bg-[#1a0f10] border border-white/5 rounded-2xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-primary transition-all" />
+                <label htmlFor="edit-user-email" className="text-xs font-black uppercase text-gray-500 tracking-widest">E-mail</label>
+                <input id="edit-user-email" name="email" defaultValue={editingUser.email} required type="email" className="w-full bg-[#1a0f10] border border-white/5 rounded-2xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-primary transition-all" />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-black uppercase text-gray-500 tracking-widest">Endereço</label>
-                <input name="address" defaultValue={editingUser.address} required type="text" className="w-full bg-[#1a0f10] border border-white/5 rounded-2xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-primary transition-all" />
+                <label htmlFor="edit-user-address" className="text-xs font-black uppercase text-gray-500 tracking-widest">Endereço</label>
+                <input id="edit-user-address" name="address" defaultValue={editingUser.address} required type="text" className="w-full bg-[#1a0f10] border border-white/5 rounded-2xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-primary transition-all" />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-black uppercase text-gray-500 tracking-widest">Cargo/Função</label>
-                <select name="role" defaultValue={editingUser.role} required className="w-full bg-[#1a0f10] border border-white/5 rounded-2xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-primary transition-all">
+                <label htmlFor="edit-user-role" className="text-xs font-black uppercase text-gray-500 tracking-widest">Cargo/Função</label>
+                <select id="edit-user-role" name="role" defaultValue={editingUser.role} required className="w-full bg-[#1a0f10] border border-white/5 rounded-2xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-primary transition-all">
                   <option value="Operador NOC">Operador NOC</option>
                   <option value="Supervisor N2">Supervisor N2</option>
                   <option value="Técnico de Campo">Técnico de Campo</option>

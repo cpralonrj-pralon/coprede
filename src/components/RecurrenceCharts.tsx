@@ -3,11 +3,11 @@ import { supabase } from '../apiService';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, AreaChart, Area, CartesianGrid, Legend, ComposedChart, Line } from 'recharts';
 
 interface RecurrenceChartsProps {
-    refreshTrigger: number;
+    refreshTrigger?: number;
     filters?: any;
 }
 
-export const RecurrenceCharts = ({ refreshTrigger, filters = {} }: RecurrenceChartsProps) => {
+export const RecurrenceCharts = ({ refreshTrigger = 0, filters = {} }: RecurrenceChartsProps) => {
     const [topOffenders, setTopOffenders] = useState<any[]>([]);
     const [resolutions, setResolutions] = useState<any[]>([]);
     const [dailyTrend, setDailyTrend] = useState<any[]>([]);
@@ -54,8 +54,10 @@ export const RecurrenceCharts = ({ refreshTrigger, filters = {} }: RecurrenceCha
             {/* Local Filters Row */}
             <div className="flex gap-4 items-end bg-surface-dark border border-white/5 p-4 rounded-xl">
                 <div className="flex flex-col gap-1">
-                    <label className="text-xs text-gray-400 font-bold uppercase">Início</label>
+                    <label htmlFor="date-start" className="text-xs text-gray-400 font-bold uppercase">Início</label>
                     <input
+                        id="date-start"
+                        aria-label="Data Início"
                         type="date"
                         className="bg-black/20 border border-white/10 rounded-lg px-2 py-1 text-white text-sm focus:border-primary focus:outline-none"
                         value={dateRange.start}
@@ -63,8 +65,10 @@ export const RecurrenceCharts = ({ refreshTrigger, filters = {} }: RecurrenceCha
                     />
                 </div>
                 <div className="flex flex-col gap-1">
-                    <label className="text-xs text-gray-400 font-bold uppercase">Fim</label>
+                    <label htmlFor="date-end" className="text-xs text-gray-400 font-bold uppercase">Fim</label>
                     <input
+                        id="date-end"
+                        aria-label="Data Fim"
                         type="date"
                         className="bg-black/20 border border-white/10 rounded-lg px-2 py-1 text-white text-sm focus:border-primary focus:outline-none"
                         value={dateRange.end}

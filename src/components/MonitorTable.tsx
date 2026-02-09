@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { fetchRawIncidents, ApiIncident } from '../apiService';
+import { fetchRawIncidents, OperationalIncident } from '../apiService';
 
 interface MonitorRow {
     id: string; // Ticket
@@ -8,7 +8,7 @@ interface MonitorRow {
     location: string;
     status: string; // Natureza
     time: string; // Formatted time for display
-    fullObject: ApiIncident;
+    fullObject: OperationalIncident;
 
     // New Fields
     ticket: number;
@@ -44,26 +44,26 @@ export const MonitorTable: React.FC<MonitorTableProps> = ({ onSelect }) => {
 
                 const normalizedData: MonitorRow[] = rawData.map((item) => {
                     // Defensive coding: ensure item.data exists
-                    const dateStr = item.data || new Date().toISOString();
+                    const dateStr = item.dh_inicio || item.created_at || new Date().toISOString();
                     const timeStr = dateStr.includes('T')
                         ? dateStr.split('T')[1]?.substring(0, 5)
                         : '00:00';
 
                     return {
-                        id: String(item.idEvento),
-                        ticket: item.idEvento,
+                        id: String(item.id_mostra || item.id),
+                        ticket: Number(item.id_mostra || 0),
                         source: 'COp Rede',
-                        title: item.tipoEvento || 'Sem Título',
-                        location: `${item.cidade || 'N/A'} - ${item.mercado || 'N/A'}`,
-                        status: item.natureza || 'Desconhecido',
+                        title: item.nm_tipo || 'Sem Título',
+                        location: `${item.nm_cidade || 'N/A'} - ${item.regional || 'N/A'}`,
+                        status: item.nm_status || 'Desconhecido',
                         time: timeStr,
                         fullObject: item,
 
                         dataRaw: dateStr,
-                        mercado: item.mercado || 'N/A',
-                        sintoma: item.sintoma || 'N/A',
+                        mercado: item.regional || 'N/A',
+                        sintoma: item.ds_sumario || 'N/A',
                         cluster: item.grupo || 'N/A',
-                        equipamento: item.equipamento || 'N/A'
+                        equipamento: item.cluster || 'N/A'
                     };
                 });
 
@@ -144,8 +144,10 @@ export const MonitorTable: React.FC<MonitorTableProps> = ({ onSelect }) => {
                 <div className="flex items-center gap-4">
                     {/* Cluster Filter */}
                     <div className="flex flex-col gap-1">
-                        <label className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Cluster</label>
+                        <label htmlFor="cluster-filter" className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Cluster</label>
                         <select
+                            id="cluster-filter"
+                            aria-label="Filtrar por Cluster"
                             value={clusterFilter}
                             onChange={(e) => setClusterFilter(e.target.value)}
                             className="bg-background-dark border border-white/10 rounded-lg text-xs text-white p-2 focus:ring-1 focus:ring-primary outline-none min-w-[140px]"
@@ -156,8 +158,10 @@ export const MonitorTable: React.FC<MonitorTableProps> = ({ onSelect }) => {
 
                     {/* Type Filter */}
                     <div className="flex flex-col gap-1">
-                        <label className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Tipo Evento</label>
+                        <label htmlFor="type-filter" className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Tipo Evento</label>
                         <select
+                            id="type-filter"
+                            aria-label="Filtrar por Tipo de Evento"
                             value={typeFilter}
                             onChange={(e) => setTypeFilter(e.target.value)}
                             className="bg-background-dark border border-white/10 rounded-lg text-xs text-white p-2 focus:ring-1 focus:ring-primary outline-none min-w-[140px]"

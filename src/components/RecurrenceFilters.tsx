@@ -74,8 +74,10 @@ export const RecurrenceFilters = ({ filters, onChange }: RecurrenceFiltersProps)
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                     {fields.map((field) => (
                         <div key={field.key} className="flex flex-col">
-                            <label className="text-xs text-gray-500 font-semibold mb-1 truncate" title={field.label}>{field.label}</label>
+                            <label htmlFor={`filter-${field.key}`} className="text-xs text-gray-500 font-semibold mb-1 truncate" title={field.label}>{field.label}</label>
                             <select
+                                id={`filter-${field.key}`}
+                                aria-label={`Filtrar por ${field.label}`}
                                 className="bg-black/40 border border-white/10 rounded-lg text-sm text-gray-300 py-1.5 px-2 focus:ring-1 focus:ring-primary focus:border-primary outline-none"
                                 value={filters[field.key as keyof FilterState] || ''}
                                 onChange={(e) => handleChange(field.key, e.target.value)}

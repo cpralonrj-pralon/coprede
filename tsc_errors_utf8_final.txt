@@ -1,0 +1,21 @@
+﻿backend/src/incidents/incidents.service.ts(53,83): error TS18046: 'e' is of type 'unknown'.
+backend/src/incidents/incidents.service.ts(55,41): error TS2345: Argument of type 'string' is not assignable to parameter of type 'never'.
+backend/src/incidents/incidents.service.ts(55,66): error TS18046: 'e' is of type 'unknown'.
+backend/src/incidents/incidents.service.ts(67,77): error TS18046: 'cleanupError' is of type 'unknown'.
+backend/src/incidents/incidents.service.ts(162,17): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'IncidentPayload'.
+  No index signature with a parameter of type 'string' was found on type 'IncidentPayload'.
+backend/src/incidents/incidents.service.ts(162,46): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'IncidentPayload'.
+  No index signature with a parameter of type 'string' was found on type 'IncidentPayload'.
+backend/src/incidents/incidents.service.ts(163,34): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'IncidentPayload'.
+  No index signature with a parameter of type 'string' was found on type 'IncidentPayload'.
+backend/src/incidents/incidents.service.ts(167,29): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'IncidentPayload'.
+  No index signature with a parameter of type 'string' was found on type 'IncidentPayload'.
+backend/src/ingestion/ingestion.controller.ts(8,5): error TS2564: Property 'id_mostra' has no initializer and is not definitely assigned in the constructor.
+backend/src/ingestion/ingestion.controller.ts(11,5): error TS2564: Property 'nm_origem' has no initializer and is not definitely assigned in the constructor.
+backend/src/ingestion/ingestion.controller.ts(101,24): error TS18046: 'error' is of type 'unknown'.
+backend/src/logbook/dto/create-logbook.dto.ts(7,5): error TS2564: Property 'titulo' has no initializer and is not definitely assigned in the constructor.
+backend/src/logbook/dto/create-logbook.dto.ts(12,5): error TS2564: Property 'data' has no initializer and is not definitely assigned in the constructor.
+backend/src/logbook/dto/create-logbook.dto.ts(17,5): error TS2564: Property 'horario' has no initializer and is not definitely assigned in the constructor.
+backend/src/logbook/dto/create-logbook.dto.ts(22,5): error TS2564: Property 'categoria' has no initializer and is not definitely assigned in the constructor.
+backend/src/logbook/dto/create-logbook.dto.ts(26,5): error TS2564: Property 'descricao' has no initializer and is not definitely assigned in the constructor.
+backend/src/supabase/supabase.service.ts(7,12): error TS2564: Property 'client' has no initializer and is not definitely assigned in the constructor.

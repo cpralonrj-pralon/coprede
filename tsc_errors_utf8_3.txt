@@ -1,0 +1,29 @@
+﻿backend/src/incidents/incidents.service.ts(53,83): error TS18046: 'e' is of type 'unknown'.
+backend/src/incidents/incidents.service.ts(55,41): error TS2345: Argument of type 'string' is not assignable to parameter of type 'never'.
+backend/src/incidents/incidents.service.ts(55,66): error TS18046: 'e' is of type 'unknown'.
+backend/src/incidents/incidents.service.ts(67,77): error TS18046: 'cleanupError' is of type 'unknown'.
+backend/src/incidents/incidents.service.ts(162,17): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'IncidentPayload'.
+  No index signature with a parameter of type 'string' was found on type 'IncidentPayload'.
+backend/src/incidents/incidents.service.ts(162,46): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'IncidentPayload'.
+  No index signature with a parameter of type 'string' was found on type 'IncidentPayload'.
+backend/src/incidents/incidents.service.ts(163,34): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'IncidentPayload'.
+  No index signature with a parameter of type 'string' was found on type 'IncidentPayload'.
+backend/src/incidents/incidents.service.ts(167,29): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'IncidentPayload'.
+  No index signature with a parameter of type 'string' was found on type 'IncidentPayload'.
+backend/src/ingestion/ingestion.controller.ts(8,5): error TS2564: Property 'id_mostra' has no initializer and is not definitely assigned in the constructor.
+backend/src/ingestion/ingestion.controller.ts(11,5): error TS2564: Property 'nm_origem' has no initializer and is not definitely assigned in the constructor.
+backend/src/ingestion/ingestion.controller.ts(101,24): error TS18046: 'error' is of type 'unknown'.
+backend/src/logbook/dto/create-logbook.dto.ts(7,5): error TS2564: Property 'titulo' has no initializer and is not definitely assigned in the constructor.
+backend/src/logbook/dto/create-logbook.dto.ts(12,5): error TS2564: Property 'data' has no initializer and is not definitely assigned in the constructor.
+backend/src/logbook/dto/create-logbook.dto.ts(17,5): error TS2564: Property 'horario' has no initializer and is not definitely assigned in the constructor.
+backend/src/logbook/dto/create-logbook.dto.ts(22,5): error TS2564: Property 'categoria' has no initializer and is not definitely assigned in the constructor.
+backend/src/logbook/dto/create-logbook.dto.ts(26,5): error TS2564: Property 'descricao' has no initializer and is not definitely assigned in the constructor.
+backend/src/supabase/supabase.service.ts(7,12): error TS2564: Property 'client' has no initializer and is not definitely assigned in the constructor.
+src/pages/Indicators.tsx(38,14): error TS2741: Property 'refreshTrigger' is missing in type '{}' but required in type 'RecurrenceChartsProps'.
+src/pages/Logbook.tsx(277,37): error TS2322: Type '(month: string) => string' is not assignable to type '((label: ReactNode, payload: readonly Payload<ValueType, NameType>[]) => ReactNode) & ((label: any, payload: Payload<ValueType, NameType>[]) => ReactNode)'.
+  Type '(month: string) => string' is not assignable to type '(label: ReactNode, payload: readonly Payload<ValueType, NameType>[]) => ReactNode'.
+    Types of parameters 'month' and 'label' are incompatible.
+      Type 'ReactNode' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.
+src/pages/Logbook.tsx(297,47): error TS2339: Property 'categoria' does not exist on type 'PieLabelRenderProps'.
+src/pages/Logbook.tsx(297,90): error TS18048: 'percent' is possibly 'undefined'.
